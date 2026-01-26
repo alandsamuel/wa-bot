@@ -60,22 +60,41 @@ class NotionService {
                 return MESSAGES.NO_EXPENSES_FOUND;
             }
 
-            let message = MESSAGES.EXPENSES_HEADER + '\n';
-            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
-            message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n\n';
-
-            let totalExpenses = 0;
+            // Group expenses by date
+            const expensesByDate = {};
             response.results.forEach((page) => {
                 const properties = page.properties;
-                const name = properties[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description';
-                const amount = properties[NOTION_PROPERTIES.AMOUNT]?.number || 0;
                 const date = properties[NOTION_PROPERTIES.DATE]?.date?.start || 'No date';
 
-                message += MESSAGES.EXPENSE_ITEM.replace('{name}', name).replace('{amount}', this.addThousandSeparator(amount)).replace('{date}', date) + '\n';
-                totalExpenses += amount;
+                if (!expensesByDate[date]) {
+                    expensesByDate[date] = [];
+                }
+
+                expensesByDate[date].push({
+                    name: properties[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description',
+                    amount: properties[NOTION_PROPERTIES.AMOUNT]?.number || 0
+                });
             });
 
-            message += MESSAGES.TOTAL_EXPENSES.replace('{total}', this.addThousandSeparator(totalExpenses));
+            let message = MESSAGES.EXPENSES_HEADER + '\n';
+            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
+            message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n';
+            message += `${'='.repeat(60)}\n\n`;
+
+            let totalExpenses = 0;
+            Object.entries(expensesByDate).forEach(([date, expenses]) => {
+                message += `📅 ${date}\n`;
+                let dateTotal = 0;
+                expenses.forEach((expense) => {
+                    message += `   • ${expense.name} - Rp. ${this.addThousandSeparator(expense.amount)}\n`;
+                    dateTotal += expense.amount;
+                    totalExpenses += expense.amount;
+                });
+                message += `   Subtotal: Rp. ${this.addThousandSeparator(dateTotal)}\n\n`;
+            });
+
+            message += `${'='.repeat(60)}\n`;
+            message += `Total Expenses: Rp. ${this.addThousandSeparator(totalExpenses)}`;
 
             return message;
         } catch (error) {
