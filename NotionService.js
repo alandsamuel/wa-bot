@@ -10,6 +10,10 @@ class NotionService {
         this.data_source_id = process.env.NOTION_DATABASE_ID;
     }
 
+    addThousandSeparator(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
     async fetchData(startDate, endDate) {
         try {
             const response = await this.notion.dataSources.query({
@@ -55,10 +59,6 @@ class NotionService {
             if (response.results.length === 0) {
                 return MESSAGES.NO_EXPENSES_FOUND;
             }
-
-            const addThousandSeparator = (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            };
 
             let message = MESSAGES.EXPENSES_HEADER + '\n';
             const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
@@ -158,20 +158,45 @@ class NotionService {
         const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
         const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
 
-        const expenses = await this.listExpenses(startDate, endDate);
-        const summary = {};
+        try {
+            const response = await this.fetchData(startDate, endDate);
+            const summary = {};
 
-        expenses.forEach(expense => {
-            const category = expense.category;
-            if (!summary[category]) {
-                summary[category] = { total: 0, items: [] };
-            }
-            summary[category].total += expense.amount;
-            summary[category].items.push(expense);
-        });
+            response.results.forEach((page) => {
+                const properties = page.properties;
+                const category = properties[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized';
+                const amount = properties[NOTION_PROPERTIES.AMOUNT]?.number || 0;
 
-        const totalExpenses = Object.values(summary).reduce((acc, cat) => acc + cat.total, 0);
-        return { summary, totalExpenses };
+                if (!summary[category]) {
+                    summary[category] = { total: 0, count: 0 };
+                }
+                summary[category].total += amount;
+                summary[category].count += 1;
+            });
+
+            const totalExpenses = Object.values(summary).reduce((acc, cat) => acc + cat.total, 0);
+
+            let message = MESSAGES.EXPENSES_HEADER + '\n';
+            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
+            message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n\n';
+
+            // Add header for the table
+            message += `Category\t\tTotal\t\tCount\n`;
+            message += `----------------------------------------\n`;
+
+            let itemNumber = 1;
+            Object.entries(summary).forEach(([category, data]) => {
+                message += `${itemNumber}. ${category}\t\tRp. ${this.addThousandSeparator(data.total)}\t\t${data.count} transactions\n`;
+                itemNumber++;
+            });
+
+            message += `\nTotal Expenses On ${monthYear} Rp. ${this.addThousandSeparator(totalExpenses)}`;
+
+            return message;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
     }
 }
 
