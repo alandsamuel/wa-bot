@@ -10,11 +10,7 @@ class NotionService {
         this.data_source_id = process.env.NOTION_DATABASE_ID;
     }
 
-    async listExpenses() {
-        const today = new Date();
-        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
-
+    async fetchData(startDate, endDate) {
         try {
             const response = await this.notion.dataSources.query({
                 data_source_id: this.data_source_id,
@@ -41,6 +37,20 @@ class NotionService {
                     }
                 ]
             });
+            return response;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
+    async listExpenses() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        try {
+            const response = await this.fetchData(startDate, endDate);
 
             if (response.results.length === 0) {
                 return MESSAGES.NO_EXPENSES_FOUND;
@@ -144,7 +154,11 @@ class NotionService {
      * @returns {Object} Summary of expenses and total expenses.
      */
     async summarizeExpenses() {
-        const expenses = await this.listExpenses();
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        const expenses = await this.listExpenses(startDate, endDate);
         const summary = {};
 
         expenses.forEach(expense => {
