@@ -71,11 +71,11 @@ class NotionService {
                 const amount = properties[NOTION_PROPERTIES.AMOUNT]?.number || 0;
                 const date = properties[NOTION_PROPERTIES.DATE]?.date?.start || 'No date';
 
-                message += MESSAGES.EXPENSE_ITEM.replace('{name}', name).replace('{amount}', addThousandSeparator(amount)).replace('{date}', date) + '\n';
+                message += MESSAGES.EXPENSE_ITEM.replace('{name}', name).replace('{amount}', this.addThousandSeparator(amount)).replace('{date}', date) + '\n';
                 totalExpenses += amount;
             });
 
-            message += MESSAGES.TOTAL_EXPENSES.replace('{total}', addThousandSeparator(totalExpenses));
+            message += MESSAGES.TOTAL_EXPENSES.replace('{total}', this.addThousandSeparator(totalExpenses));
 
             return message;
         } catch (error) {

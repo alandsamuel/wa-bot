@@ -54,7 +54,7 @@ const MESSAGES = {
     // List expenses
     NO_EXPENSES_FOUND: 'No expenses found.',
     EXPENSES_HEADER: 'Here are your recent expenses:',
-    EXPENSES_FOR_MONTH: '📊 Expenses for {monthYear}',
+    EXPENSES_FOR_MONTH: '📊 Expenses for monthly pay cycle {monthYear}',
     EXPENSE_ITEM: '- {name}: Rp. {amount} on {date}',
     TOTAL_EXPENSES: '\n💰 Total: Rp. {total}',
 
