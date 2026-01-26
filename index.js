@@ -76,6 +76,18 @@ function parseExpense(text) {
     return null;
 }
 
+async function handleSummarizeCommand(message) {
+    console.log('Handling summarize command');
+    const { summary, totalExpenses } = await notionService.summarizeExpenses();
+    let response = 'Expense Summary:\n';
+
+    for (const [category, data] of Object.entries(summary)) {
+        response += `Category: ${category}, Total: ${data.total}\n`;
+    }
+    response += `Total Expenses: ${totalExpenses}`;
+    await message.reply(response);
+}
+
 client.on('ready', () => {
     console.log(MESSAGES.BOT_READY);
     console.log(MESSAGES.BOT_PHONE, client.info.wid.user);
@@ -127,6 +139,10 @@ client.on('message', async (message) => {
             default:
                 // Try to parse as expense if no command matched
                 await handleExpenseInput(message, userId, text);
+        }
+
+        if (message.body.startsWith('!summarize')) {
+            await handleSummarizeCommand(message);
         }
     } catch (error) {
         console.error(MESSAGES.ERROR_HANDLER, error);

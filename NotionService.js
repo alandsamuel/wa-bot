@@ -138,6 +138,27 @@ class NotionService {
             throw new Error(MESSAGES.FAILED_FETCH_CATEGORIES);
         }
     }
+
+    /**
+     * Summarizes expenses by category and calculates total expenses.
+     * @returns {Object} Summary of expenses and total expenses.
+     */
+    async summarizeExpenses() {
+        const expenses = await this.listExpenses();
+        const summary = {};
+
+        expenses.forEach(expense => {
+            const category = expense.category;
+            if (!summary[category]) {
+                summary[category] = { total: 0, items: [] };
+            }
+            summary[category].total += expense.amount;
+            summary[category].items.push(expense);
+        });
+
+        const totalExpenses = Object.values(summary).reduce((acc, cat) => acc + cat.total, 0);
+        return { summary, totalExpenses };
+    }
 }
 
 module.exports = new NotionService();
