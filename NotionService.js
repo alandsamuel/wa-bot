@@ -178,26 +178,19 @@ class NotionService {
 
             let message = MESSAGES.EXPENSES_HEADER + '\n';
             const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
-            message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n\n';
-
-            // Add header for the table
-            const colWidth1 = 20; // Category column
-            const colWidth2 = 20; // Total column
-            const colWidth3 = 15; // Count column
-
-            message += `${'Category'.padEnd(colWidth1)}  ${'Total'.padEnd(colWidth2)}  ${'Count'.padEnd(colWidth3)}\n`;
-            message += `${'-'.repeat(colWidth1)}  ${'-'.repeat(colWidth2)}  ${'-'.repeat(colWidth3)}\n`;
+            message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n';
+            message += `${'='.repeat(60)}\n\n`;
 
             let itemNumber = 1;
             Object.entries(summary).forEach(([category, data]) => {
-                const categoryLabel = `${itemNumber}. ${category}`;
-                const totalLabel = `Rp. ${this.addThousandSeparator(data.total)}`;
-                const countLabel = `${data.count} transactions`;
-                message += `${categoryLabel.padEnd(colWidth1)}  ${totalLabel.padEnd(colWidth2)}  ${countLabel.padEnd(colWidth3)}\n`;
+                message += `${itemNumber}. ${category}\n`;
+                message += `   Total: Rp. ${this.addThousandSeparator(data.total)}\n`;
+                message += `   Count: ${data.count} transactions\n\n`;
                 itemNumber++;
             });
 
-            message += `\n${'='.repeat(colWidth1 + colWidth2 + colWidth3 + 4)}\nTotal Expenses On ${monthYear}: Rp. ${this.addThousandSeparator(totalExpenses)}`;
+            message += `${'='.repeat(60)}\n`;
+            message += `Total Expenses On ${monthYear}: Rp. ${this.addThousandSeparator(totalExpenses)}`;
 
             return message;
         } catch (error) {
