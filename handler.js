@@ -1,5 +1,6 @@
 const notionService = require('./NotionService');
 const { COMMANDS, MESSAGES } = require('./constants');
+
 const moment = require('moment-timezone');
 
 const TIMEZONE = 'Asia/Jakarta';
@@ -41,14 +42,32 @@ async function handleCategoryInput(message, userId, text) {
     }
 
     console.log(MESSAGES.ADDING_EXPENSE + category);
-    await notionService.addExpense({
-        amount: Number(expenseData.amount),
-        category,
-        description: expenseData.description,
-        date: moment().tz(TIMEZONE).toISOString()
-    });
 
-    await message.reply(MESSAGES.EXPENSE_ADDED.replace('{amount}', expenseData.amount).replace('{description}', expenseData.description).replace('{category}', category));
+    // Check if this is a receipt or manual expense
+    if (expenseData.isReceipt) {
+        // For receipts, store with extracted data
+        await notionService.addExpense({
+            amount: expenseData.amount,
+            category,
+            description: expenseData.description,
+            date: expenseData.date
+        });
+        console.log('Receipt stored successfully in Notion');
+    } else {
+        // For manual expenses
+        await notionService.addExpense({
+            amount: Number(expenseData.amount),
+            category,
+            description: expenseData.description,
+            date: moment().tz(TIMEZONE).toISOString()
+        });
+    }
+
+    const confirmMessage = expenseData.isReceipt
+        ? MESSAGES.RECEIPT_STORED.replace('{vendor}', expenseData.description).replace('{amount}', expenseData.amount).replace('{category}', category)
+        : MESSAGES.EXPENSE_ADDED.replace('{amount}', expenseData.amount).replace('{description}', expenseData.description).replace('{category}', category);
+
+    await message.reply(confirmMessage);
     pendingExpenses.delete(userId);
 }
 
@@ -64,6 +83,35 @@ async function handleExpenseInput(message, userId, text) {
         console.log(MESSAGES.NO_EXPENSE_DETECTED);
         await message.reply(MESSAGES.HELP_MESSAGE);
     }
+}
+
+async function handleReceiptConfirmation(message, userId, text) {
+    const receiptData = pendingExpenses.get(userId);
+
+    if (text === COMMANDS.CANCEL) {
+        console.log('Receipt storage cancelled by user');
+        await message.reply(MESSAGES.EXPENSE_CANCELLED);
+        pendingExpenses.delete(userId);
+        return;
+    }
+
+    // Text is the confirmation for description
+    const confirmedDescription = text.trim();
+    console.log('Receipt description confirmed:', confirmedDescription);
+
+    // Update description if user provided a different one
+    receiptData.description = confirmedDescription;
+
+    // Move to category selection phase
+    const categoryPrompt = MESSAGES.EXPENSE_DETECTED_PROMPT
+        .replace('{description}', receiptData.description)
+        .replace('{amount}', receiptData.amount)
+        .replace('{categories}', receiptData.categories.join('\n'));
+
+    // Change the phase to category selection
+    receiptData.phase = 'selectCategory';
+
+    await message.reply(categoryPrompt);
 }
 
 function parseExpense(text) {
@@ -93,5 +141,6 @@ module.exports = {
     handleCategoryInput,
     handleExpenseInput,
     handleSummarizeCommand,
+    handleReceiptConfirmation,
     parseExpense
 };

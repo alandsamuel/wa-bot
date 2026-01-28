@@ -1,6 +1,5 @@
 const axios = require('axios');
 const { MESSAGES } = require('./constants');
-const notionService = require('./NotionService');
 const moment = require('moment-timezone');
 require('dotenv').config();
 
@@ -102,10 +101,10 @@ async function processReceiptWithVeryfi(imageBuffer, fileName) {
  * @returns {string} Formatted receipt message
  */
 function formatReceiptMessage(receiptData) {
-    const vendor = receiptData.meta?.vendor?.name || receiptData.vendor?.name || 'Unknown';
-    const total = receiptData.meta?.total?.value || receiptData.total || 0;
-    const currency = receiptData.meta?.currency_code?.value || 'IDR';
-    const receiptDate = receiptData.meta?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
+    const vendor = receiptData.vendor?.name?.value || 'Unknown';
+    const total = receiptData?.total?.value || 0;
+    const currency = receiptData?.currency_code?.value || 'IDR';
+    const receiptDate = receiptData?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
     const lineItems = receiptData.line_items || [];
 
     let message = '📄 Receipt Details\n';
@@ -141,7 +140,7 @@ function formatReceiptMessage(receiptData) {
  */
 function extractReceiptForNotion(receiptData) {
     const vendor = receiptData.meta?.vendor?.name || receiptData.vendor?.name || 'Receipt';
-    const total = receiptData.meta?.total?.value || receiptData.total || 0;
+    const total = receiptData?.total?.value || 0;
     const receiptDate = receiptData.meta?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     return {
@@ -153,8 +152,9 @@ function extractReceiptForNotion(receiptData) {
 
 /**
  * Main handler for receipt processing from WhatsApp message
+ * Returns extracted data without storing to Notion
  * @param {Object} message - WhatsApp message object
- * @returns {Promise<string>} Response message to send to user
+ * @returns {Promise<Object|null>} Extracted receipt data or null if not an image
  */
 async function handleReceiptMessage(message) {
     try {
@@ -185,25 +185,19 @@ async function handleReceiptMessage(message) {
         // Extract data for Notion
         const receiptForNotion = extractReceiptForNotion(receiptData);
 
-        // Store in Notion
-        console.log('Storing receipt in Notion...');
-        await notionService.addExpense({
-            amount: receiptForNotion.amount,
-            category: 'Receipt',
-            description: receiptForNotion.description,
-            date: receiptForNotion.date
-        });
-
-        // Format and send response
-        const formattedMessage = formatReceiptMessage(receiptData);
         await message.react('✅');
-        console.log('Receipt stored successfully in Notion');
+        console.log('Receipt extracted successfully from Veryfi');
 
-        return formattedMessage;
+        // Return extracted data for further processing
+        return {
+            receiptData,
+            receiptForNotion,
+            formattedMessage: formatReceiptMessage(receiptData)
+        };
     } catch (error) {
         console.error('Error in handleReceiptMessage:', error);
         await message.react('❌');
-        return `Error processing receipt: ${error.message}`;
+        return null;
     }
 }
 

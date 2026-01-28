@@ -9,10 +9,12 @@ const {
     handleNotionLinkCommand,
     handleCategoryInput,
     handleExpenseInput,
-    handleSummarizeCommand
+    handleSummarizeCommand,
+    handleReceiptConfirmation
 } = require('./handler');
 const { initializeCron, stopCron } = require('./cron');
 const { handleReceiptMessage } = require('./receipt');
+const notionService = require('./NotionService');
 
 const client = new Client(config.clientOptions);
 
@@ -55,6 +57,16 @@ client.on('message', async (message) => {
     try {
         // Handle pending expense category input
         if (pendingExpenses.has(userId)) {
+            const expenseData = pendingExpenses.get(userId);
+
+            // Handle receipt confirmation (asking for description)
+            if (expenseData.isReceipt && expenseData.phase === 'confirmDescription') {
+                console.log('Handling receipt description confirmation');
+                await handleReceiptConfirmation(message, userId, text);
+                return;
+            }
+
+            // Handle category input (for both receipts and manual expenses)
             console.log(MESSAGES.HANDLING_CATEGORY);
             await handleCategoryInput(message, userId, text);
             return;
@@ -79,11 +91,28 @@ client.on('message', async (message) => {
                 break;
             default:
                 // Try to process as receipt if image is sent
-                const receiptResponse = await handleReceiptMessage(message);
-                if (receiptResponse) {
-                    await message.reply(receiptResponse);
+                const receiptResult = await handleReceiptMessage(message);
+                if (receiptResult) {
+                    // Show receipt details and ask to confirm description
+                    await message.reply(receiptResult.formattedMessage);
+
+                    // Get categories for the receipt flow
+                    const categories = await notionService.getCategories();
+
+                    // Store receipt data for pending confirmation
+                    pendingExpenses.set(userId, {
+                        ...receiptResult.receiptForNotion,
+                        amount: receiptResult.receiptForNotion.amount,
+                        categories,
+                        isReceipt: true,
+                        phase: 'confirmDescription'
+                    });
+
+                    // Ask user to confirm or modify the description
+                    const descriptionPrompt = `📝 What will we call this transaction are :\n(or type 'cancel' to abort)`;
+                    await message.reply(descriptionPrompt);
                 } else {
-                    // Try to parse as expense if no command matched and not an image
+                    // Try to parse as expense if not an image
                     await handleExpenseInput(message, userId, text);
                 }
         }

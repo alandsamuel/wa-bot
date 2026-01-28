@@ -28,7 +28,7 @@ async function testVeryfiReceipt() {
     console.log('✅ Environment variables loaded\n');
 
     // Check if test image exists
-    const testImagePath = path.join(__dirname, 'test.jpeg');
+    const testImagePath = path.join(__dirname, 'test.heic');
     console.log(`📁 Looking for test image: ${testImagePath}`);
 
     if (!fs.existsSync(testImagePath)) {
@@ -96,6 +96,7 @@ async function testVeryfiReceipt() {
             }
             console.log('━'.repeat(60) + '\n');
         }
+        console.log(`Total : ${receiptData?.total.value}`)
 
         console.log('✅ All tests passed! Veryfi integration is working correctly.\n');
     } catch (error) {

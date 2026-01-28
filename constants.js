@@ -64,6 +64,7 @@ const MESSAGES = {
     RECEIPT_PROCESSING: '⏳ Processing receipt...',
     RECEIPT_PROCESSED: '✅ Receipt processed successfully!',
     RECEIPT_ERROR: '❌ Error processing receipt:',
+    RECEIPT_STORED: '✅ Receipt stored: {vendor} - Rp. {amount}\n📁 Category: {category}',
 
     // Errors
     ERROR_MESSAGE: 'Error: {error}',
