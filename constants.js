@@ -1,6 +1,7 @@
 // Commands
 const COMMANDS = {
     LIST: '!list',
+    TODAY: '!today',
     CANCEL: 'cancel',
     NOTION_LINK: '!notionlink'
 };
@@ -55,6 +56,7 @@ const MESSAGES = {
     NO_EXPENSES_FOUND: 'No expenses found.',
     EXPENSES_HEADER: 'Here are your recent expenses:',
     EXPENSES_FOR_MONTH: '📊 Expenses for monthly pay cycle {monthYear}',
+    EXPENSES_FOR_TODAY: '📊 Expenses for today ({date})',
     EXPENSE_ITEM: '- {name}: Rp. {amount} on {date}',
     TOTAL_EXPENSES: '\n💰 Total: Rp. {total}',
 

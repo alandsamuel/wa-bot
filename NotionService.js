@@ -103,6 +103,42 @@ class NotionService {
         }
     }
 
+    async todayExpenses() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+
+        try {
+            const response = await this.fetchData(startDate, endDate);
+
+            if (response.results.length === 0) {
+                return MESSAGES.NO_EXPENSES_FOUND;
+            }
+
+            const dateStr = today.toLocaleDateString(DATE_LOCALE, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            let message = MESSAGES.EXPENSES_HEADER + '\n';
+            message += MESSAGES.EXPENSES_FOR_TODAY.replace('{date}', dateStr) + '\n';
+            message += `${'='.repeat(60)}\n\n`;
+
+            let totalExpenses = 0;
+            response.results.forEach((page) => {
+                const properties = page.properties;
+                const name = properties[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description';
+                const amount = properties[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+                message += `   • ${name} - Rp. ${this.addThousandSeparator(amount)}\n`;
+                totalExpenses += amount;
+            });
+
+            message += `\n${'='.repeat(60)}\n`;
+            message += `Total Expenses Today: Rp. ${this.addThousandSeparator(totalExpenses)}`;
+
+            return message;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
     async addExpense({ amount, category, description, date }) {
         const current = new Date(date);
         try {

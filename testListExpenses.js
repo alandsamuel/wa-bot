@@ -3,10 +3,10 @@ const NotionService = require('./NotionService');
 
 async function test() {
     try {
-        console.log('Testing listExpenses...');
-        const result = await NotionService.listExpenses();
-        console.log('Result:');
-        console.log(result);
+        // console.log('Testing listExpenses...');
+        // const result = await NotionService.listExpenses();
+        // console.log('Result:');
+        // console.log(result);
 
         // const create = await NotionService.addExpense({
         //     amount: 15000,
@@ -24,6 +24,10 @@ async function test() {
         // const summary = await NotionService.summarizeExpenses();
         // console.log('Summary:');
         // console.log(summary);
+
+        const today = await NotionService.todayExpenses();
+        console.log('Today Expenses:');
+        console.log(today);
     } catch (error) {
         console.error('Test failed:', error);
     }
