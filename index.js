@@ -12,6 +12,7 @@ const {
     handleSummarizeCommand
 } = require('./handler');
 const { initializeCron, stopCron } = require('./cron');
+const { handleReceiptMessage } = require('./receipt');
 
 const client = new Client(config.clientOptions);
 
@@ -74,8 +75,14 @@ client.on('message', async (message) => {
                 await handleSummarizeCommand(message);
                 break;
             default:
-                // Try to parse as expense if no command matched
-                await handleExpenseInput(message, userId, text);
+                // Try to process as receipt if image is sent
+                const receiptResponse = await handleReceiptMessage(message);
+                if (receiptResponse) {
+                    await message.reply(receiptResponse);
+                } else {
+                    // Try to parse as expense if no command matched and not an image
+                    await handleExpenseInput(message, userId, text);
+                }
         }
     } catch (error) {
         console.error(MESSAGES.ERROR_HANDLER, error);

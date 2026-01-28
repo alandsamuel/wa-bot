@@ -50,7 +50,7 @@ const MESSAGES = {
     INVALID_CATEGORY_RESPONSE: '❌ Invalid category!\n\nAvailable categories:\n{categories}\n\nPlease enter a valid category:\n\nor type \'cancel\' to abort.',
     EXPENSE_ADDED: '✅ Expense added: {amount} - {description}\n📁 Category: {category}',
     EXPENSE_DETECTED_PROMPT: '📝 Expense detected: {description}\n💰 Amount: {amount}\n\nAvailable categories:\n{categories}\n\nPlease enter the category: \n or type \'cancel\' to abort.',
-    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List recent expenses\n• !notionlink - Get Notion Data link',
+    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List recent expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary\n• !notionlink - Get Notion Data link\n• Send receipt image - Process receipt with Veryfi',
 
     // List expenses
     NO_EXPENSES_FOUND: 'No expenses found.',
@@ -59,6 +59,11 @@ const MESSAGES = {
     EXPENSES_FOR_TODAY: '📊 Expenses for today ({date})',
     EXPENSE_ITEM: '- {name}: Rp. {amount} on {date}',
     TOTAL_EXPENSES: '\n💰 Total: Rp. {total}',
+
+    // Receipt handling
+    RECEIPT_PROCESSING: '⏳ Processing receipt...',
+    RECEIPT_PROCESSED: '✅ Receipt processed successfully!',
+    RECEIPT_ERROR: '❌ Error processing receipt:',
 
     // Errors
     ERROR_MESSAGE: 'Error: {error}',
