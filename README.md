@@ -5,7 +5,9 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 ## Features
 
 - ✅ **Expense Tracking**: Send expenses in natural format (e.g., "makan nasi padang 20000")
-- 📋 **List Expenses**: View monthly expenses summary with `!list` command
+- 📋 **List Monthly Expenses**: View monthly expenses summary with `!list` command
+- 📅 **Today's Expenses**: Check today's expenses with `!today` command
+- 📊 **Daily Summary**: Automatic daily summary of yesterday's expenses sent at midnight
 - 🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
 - 🏷️ **Category Management**: Automatically categorize expenses from predefined categories
 - 💾 **Notion Integration**: All expenses stored in your Notion database
@@ -13,7 +15,7 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 
 ## Prerequisites
 
-- Node.js 20+ 
+- Node.js 20+
 - pnpm 10.26.2+
 - WhatsApp account
 - [Notion Integration Token](https://www.notion.so/my-integrations)
@@ -22,17 +24,20 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 ## Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd wa-bot
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Setup environment variables**
+
    ```bash
    cp .env.example .env
    ```
@@ -48,18 +53,22 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 ## Getting Your Notion Credentials
 
 ### Notion Token
+
 1. Go to [Notion Integrations](https://www.notion.so/my-integrations)
 2. Click "Create new integration"
 3. Name your integration and select "Read" and "Update" capabilities
 4. Copy the "Internal Integration Token"
 
 ### Database ID
+
 1. Open your Notion expense database
 2. The URL looks like: `https://www.notion.so/workspace/[DATABASE_ID]?v=...`
 3. Copy the `DATABASE_ID` part
 
 ### Database Structure
+
 Your Notion database must have these properties:
+
 - **Name** (Title): Description of the expense
 - **Amount** (Number): Expense amount
 - **Category** (Select): Category of the expense
@@ -68,6 +77,7 @@ Your Notion database must have these properties:
 ## Usage
 
 ### Start the Bot
+
 ```bash
 pnpm start
 ```
@@ -76,21 +86,25 @@ The bot will display a QR code on first run. Scan it with WhatsApp to authentica
 
 ### Commands
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `makan nasi padang 20000` | Add expense | Stores expense with amount and asks for category |
-| `!list` | List monthly expenses | Shows all expenses for current month with total |
-| `!notionlink` | Get Notion link | Shares your Notion database link |
-| `cancel` | Cancel pending expense | Cancels expense addition when waiting for category |
+| Command                   | Description                 | Example                                            |
+| ------------------------- | --------------------------- | -------------------------------------------------- |
+| `makan nasi padang 20000` | Add expense                 | Stores expense with amount and asks for category   |
+| `!list`                   | List monthly expenses       | Shows all expenses for current month with total    |
+| `!today`                  | Show today's expenses       | Displays all expenses for today with daily total   |
+| `!notionlink`             | Get Notion link             | Shares your Notion database link                   |
+| `!summarize`              | Monthly summary by category | Shows expenses breakdown by category               |
+| `cancel`                  | Cancel pending expense      | Cancels expense addition when waiting for category |
 
 ### Expense Format
 
 Send expenses in this format:
+
 ```
 <description> <amount>
 ```
 
 Examples:
+
 - `makan nasi padang 20000`
 - `bensin motor 50000`
 - `belanja groceries 150k` (supports 'k' suffix for thousands)
@@ -100,11 +114,13 @@ The bot will ask you to select a category from your existing categories in Notio
 ## Docker Support
 
 ### Build Docker Image
+
 ```bash
 docker build -t wa-bot .
 ```
 
 ### Run with Docker
+
 ```bash
 docker run --env-file .env -v wa-auth:/app/.wwebjs_auth wa-bot
 ```
@@ -115,8 +131,10 @@ The `-v wa-auth:/app/.wwebjs_auth` flag persists WhatsApp session data across co
 
 ```
 wa-bot/
-├── index.js              # Main bot logic with command handlers
-├── NotionService.js      # Notion database integration
+├── index.js              # Main bot entry point and event listeners
+├── handler.js            # Command handlers and expense parsing logic
+├── cron.js               # Daily summary cron job scheduler
+├── NotionService.js      # Notion database integration and queries
 ├── config.js             # Bot configuration
 ├── constants.js          # Centralized constants and messages
 ├── testListExpenses.js   # Test script for Notion integration
@@ -131,30 +149,50 @@ wa-bot/
 ## Project Features
 
 ### Clean Code Architecture
+
 - **constants.js**: All hardcoded strings, commands, and messages centralized
-- **NotionService.js**: Encapsulated Notion API interactions
-- **index.js**: Command routing with switch case for better readability
-- Extracted handler functions for each command type
+- **NotionService.js**: Encapsulated Notion API interactions and data fetching
+- **handler.js**: Separated command handlers and expense parsing logic for better modularity
+- **cron.js**: Scheduled tasks management with configurable timing
+- **index.js**: Clean entry point with command routing via switch case
+- Modular design allowing easy testing and feature additions
 
 ### Error Handling
+
 - Graceful error messages sent to WhatsApp
 - Comprehensive logging for debugging
 - Try-catch blocks around all async operations
+- Cron job error handling with fallback messaging
 
 ### Configuration
+
 - Environment-based configuration
 - Puppeteer sandbox mode disabled for Docker compatibility
 - Local authentication with WhatsApp session persistence
+- Customizable cron schedule for daily summary (default: 00:00)
 
 ## Development
 
 ### Add New Command
+
 1. Add command constant in `constants.js`
-2. Create handler function in `index.js`
-3. Add case to switch statement
+2. Create handler function in `handler.js`
+3. Add case to switch statement in `index.js`
 4. Add help message in `MESSAGES.HELP_MESSAGE`
 
+### Customize Cron Schedule
+
+Edit the `CRON_SCHEDULE` constant in `cron.js`:
+
+```javascript
+// Run at 06:00 AM daily
+const CRON_SCHEDULE = "0 6 * * *";
+```
+
+Use [cron expression syntax](https://crontab.guru/) for other schedules.
+
 ### Add New Message
+
 1. Add to `MESSAGES` object in `constants.js`
 2. Use `{placeholder}` syntax for dynamic values
 3. Replace placeholders with `.replace()` in code
@@ -162,16 +200,19 @@ wa-bot/
 ## Troubleshooting
 
 ### Bot not responding
+
 - Check `.env` variables are correct
 - Verify phone number is whitelisted (without + or spaces)
 - Check bot logs for errors
 
 ### Can't connect to Notion
+
 - Verify `NOTION_TOKEN` is valid
 - Check database ID is correct
 - Ensure integration has "Read" and "Update" permissions
 
 ### QR Code issues
+
 - Delete `.wwebjs_auth` folder and restart bot
 - Ensure WhatsApp account isn't logged in elsewhere
 
