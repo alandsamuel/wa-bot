@@ -8,7 +8,8 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 - 📋 **List Monthly Expenses**: View monthly expenses summary with `!list` command
 - 📅 **Today's Expenses**: Check today's expenses with `!today` command
 - 📊 **Daily Summary**: Automatic daily summary of yesterday's expenses sent at midnight
-- 🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
+- � **Receipt Processing**: Send receipt images for automatic data extraction and Notion storage
+- �🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
 - 🏷️ **Category Management**: Automatically categorize expenses from predefined categories
 - 💾 **Notion Integration**: All expenses stored in your Notion database
 - 🔐 **Whitelisted Access**: Only whitelisted phone numbers can use the bot
@@ -48,6 +49,8 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
    NOTION_TOKEN=your_notion_api_key
    NOTION_DATABASE_ID=your_database_id
    NOTION_LINK=https://www.notion.so/your-database
+   VERYFI_CLIENT_ID=your_veryfi_client_id
+   VERYFI_AUTHORIZATION=your_veryfi_username:your_veryfi_api_key
    ```
 
 ## Getting Your Notion Credentials
@@ -74,6 +77,12 @@ Your Notion database must have these properties:
 - **Category** (Select): Category of the expense
 - **Date** (Date): Date of the expense
 
+### Veryfi Credentials
+
+1. Go to [Veryfi Dashboard](https://app.veryfi.com/api/settings/keys/)
+2. Copy your **Client ID**
+3. Copy your **API Key** in format: `username:api_key`
+
 ## Usage
 
 ### Start the Bot
@@ -94,6 +103,7 @@ The bot will display a QR code on first run. Scan it with WhatsApp to authentica
 | `!notionlink`             | Get Notion link             | Shares your Notion database link                   |
 | `!summarize`              | Monthly summary by category | Shows expenses breakdown by category               |
 | `cancel`                  | Cancel pending expense      | Cancels expense addition when waiting for category |
+| Send receipt image        | Process receipt             | Extracts data and stores in Notion                 |
 
 ### Expense Format
 
@@ -110,6 +120,16 @@ Examples:
 - `belanja groceries 150k` (supports 'k' suffix for thousands)
 
 The bot will ask you to select a category from your existing categories in Notion.
+
+### Receipt Processing
+
+Simply send a receipt image to the bot and it will:
+
+1. Extract data using Veryfi (vendor, total amount, items, date)
+2. Automatically store in your Notion database under "Receipt" category
+3. Send you a formatted summary with extracted details
+
+Supported image formats: JPEG, PNG, WebP, GIF, BMP
 
 ## Docker Support
 
