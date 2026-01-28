@@ -60,6 +60,9 @@ client.on('message', async (message) => {
             return;
         }
 
+        console.log('Processing command or expense input...');
+        await message.react('⏳');
+
         // Route commands using switch case
         switch (lowerText) {
             case COMMANDS.LIST:
@@ -84,6 +87,9 @@ client.on('message', async (message) => {
                     await handleExpenseInput(message, userId, text);
                 }
         }
+
+        console.log('Finished command or expense input...');
+        await message.react('✅');
     } catch (error) {
         console.error(MESSAGES.ERROR_HANDLER, error);
         await message.reply(MESSAGES.ERROR_MESSAGE.replace('{error}', error.message));

@@ -1,7 +1,10 @@
 const axios = require('axios');
 const { MESSAGES } = require('./constants');
 const notionService = require('./NotionService');
+const moment = require('moment-timezone');
 require('dotenv').config();
+
+const TIMEZONE = 'Asia/Jakarta';
 
 // Veryfi API Configuration
 const VERYFI_API_URL = 'https://api.veryfi.com/api/v8/partner/documents';
@@ -102,7 +105,7 @@ function formatReceiptMessage(receiptData) {
     const vendor = receiptData.meta?.vendor?.name || receiptData.vendor?.name || 'Unknown';
     const total = receiptData.meta?.total?.value || receiptData.total || 0;
     const currency = receiptData.meta?.currency_code?.value || 'IDR';
-    const receiptDate = receiptData.meta?.date?.value || new Date().toISOString().split('T')[0];
+    const receiptDate = receiptData.meta?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
     const lineItems = receiptData.line_items || [];
 
     let message = '📄 Receipt Details\n';
@@ -139,7 +142,7 @@ function formatReceiptMessage(receiptData) {
 function extractReceiptForNotion(receiptData) {
     const vendor = receiptData.meta?.vendor?.name || receiptData.vendor?.name || 'Receipt';
     const total = receiptData.meta?.total?.value || receiptData.total || 0;
-    const receiptDate = receiptData.meta?.date?.value || new Date().toISOString().split('T')[0];
+    const receiptDate = receiptData.meta?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     return {
         description: vendor,

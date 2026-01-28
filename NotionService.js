@@ -1,6 +1,10 @@
 const { Client } = require('@notionhq/client');
+const moment = require('moment-timezone');
 const { NOTION_PROPERTIES, DATE_LOCALE, MESSAGES, DATE_FORMAT_OPTIONS } = require('./constants');
 require('dotenv').config();
+
+// Set default timezone to Asia/Jakarta
+const TIMEZONE = 'Asia/Jakarta';
 
 class NotionService {
     constructor() {
@@ -49,9 +53,9 @@ class NotionService {
     }
 
     async listExpenses() {
-        const today = new Date();
-        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+        const today = moment().tz(TIMEZONE);
+        const startDate = today.clone().startOf('month').toISOString();
+        const endDate = today.clone().endOf('month').toISOString();
 
         try {
             const response = await this.fetchData(startDate, endDate);
@@ -77,7 +81,7 @@ class NotionService {
             });
 
             let message = MESSAGES.EXPENSES_HEADER + '\n';
-            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
+            const monthYear = today.format('MMMM YYYY');
             message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n';
             message += `${'='.repeat(60)}\n\n`;
 
@@ -104,9 +108,9 @@ class NotionService {
     }
 
     async todayExpenses() {
-        const today = new Date();
-        const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-        const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+        const today = moment().tz(TIMEZONE);
+        const startDate = today.clone().startOf('day').toISOString();
+        const endDate = today.clone().endOf('day').toISOString();
 
         try {
             const response = await this.fetchData(startDate, endDate);
@@ -115,7 +119,7 @@ class NotionService {
                 return MESSAGES.NO_EXPENSES_FOUND;
             }
 
-            const dateStr = today.toLocaleDateString(DATE_LOCALE, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            const dateStr = today.format('ddd, MMM D, YYYY');
             let message = MESSAGES.EXPENSES_HEADER + '\n';
             message += MESSAGES.EXPENSES_FOR_TODAY.replace('{date}', dateStr) + '\n';
             message += `${'='.repeat(60)}\n\n`;
@@ -140,7 +144,7 @@ class NotionService {
     }
 
     async addExpense({ amount, category, description, date }) {
-        const current = new Date(date);
+        const current = moment(date).tz(TIMEZONE);
         try {
             const response = await this.notion.pages.create({
                 parent: { data_source_id: this.data_source_id },
@@ -164,7 +168,7 @@ class NotionService {
                     },
                     [NOTION_PROPERTIES.DATE]: {
                         date: {
-                            start: `${current.getFullYear()}-${(current.getMonth() + 1).toString().padStart(2, '0')}-${current.getDate().toString().padStart(2, '0')}`
+                            start: current.format('YYYY-MM-DD')
                         }
                     }
                 }
@@ -209,9 +213,9 @@ class NotionService {
      * @returns {Object} Summary of expenses and total expenses.
      */
     async summarizeExpenses() {
-        const today = new Date();
-        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+        const today = moment().tz(TIMEZONE);
+        const startDate = today.clone().startOf('month').toISOString();
+        const endDate = today.clone().endOf('month').toISOString();
 
         try {
             const response = await this.fetchData(startDate, endDate);
@@ -232,7 +236,7 @@ class NotionService {
             const totalExpenses = Object.values(summary).reduce((acc, cat) => acc + cat.total, 0);
 
             let message = MESSAGES.EXPENSES_HEADER + '\n';
-            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
+            const monthYear = today.format('MMMM YYYY');
             message += MESSAGES.EXPENSES_FOR_MONTH.replace('{monthYear}', monthYear) + '\n';
             message += `${'='.repeat(60)}\n\n`;
 

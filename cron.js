@@ -1,19 +1,20 @@
 const cron = require('node-cron');
 const notionService = require('./NotionService');
 const { MESSAGES } = require('./constants');
+const moment = require('moment-timezone');
 
-// Cron schedule configuration - runs every day at 00:00 (midnight)
+// Cron schedule configuration - runs every day at 00:00 (midnight) Asia/Jakarta timezone
 const CRON_SCHEDULE = '0 0 * * *';
+const TIMEZONE = 'Asia/Jakarta';
 
 let scheduledTask = null;
 
 async function getYesterdayExpenses() {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const today = moment().tz(TIMEZONE);
+    const yesterday = today.clone().subtract(1, 'day');
 
-    const startDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).toISOString();
-    const endDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate() + 1).toISOString();
+    const startDate = yesterday.clone().startOf('day').toISOString();
+    const endDate = yesterday.clone().endOf('day').toISOString();
 
     try {
         const response = await notionService.fetchData(startDate, endDate);
@@ -22,7 +23,7 @@ async function getYesterdayExpenses() {
             return MESSAGES.NO_EXPENSES_FOUND;
         }
 
-        const dateStr = yesterday.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        const dateStr = yesterday.format('ddd, MMM D, YYYY');
         let message = MESSAGES.EXPENSES_HEADER + '\n';
         message += `📊 Yesterday's Expenses (${dateStr})\n`;
         message += `${'='.repeat(60)}\n\n`;
@@ -69,7 +70,7 @@ function initializeCron(client) {
         }
     });
 
-    console.log(`✅ Cron job initialized: Runs every day at 00:00 (${CRON_SCHEDULE})`);
+    console.log(`✅ Cron job initialized: Runs every day at 00:00 ${TIMEZONE} timezone (${CRON_SCHEDULE})`);
 }
 
 function stopCron() {

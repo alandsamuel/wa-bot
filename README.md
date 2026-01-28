@@ -93,6 +93,29 @@ pnpm start
 
 The bot will display a QR code on first run. Scan it with WhatsApp to authenticate.
 
+### Testing
+
+#### Test Notion Integration
+
+```bash
+node testListExpenses.js
+```
+
+Tests fetching and listing expenses from Notion.
+
+#### Test Veryfi Receipt Processing
+
+```bash
+node testReceipt.js
+```
+
+Tests the Veryfi API integration for receipt processing. Requires:
+
+1. A test receipt image named `test.jpeg` in the project root
+2. Valid Veryfi credentials in `.env`
+
+The test will display extracted receipt data and formatted output.
+
 ### Commands
 
 | Command                   | Description                 | Example                                            |

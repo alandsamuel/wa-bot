@@ -1,6 +1,8 @@
 const notionService = require('./NotionService');
 const { COMMANDS, MESSAGES } = require('./constants');
+const moment = require('moment-timezone');
 
+const TIMEZONE = 'Asia/Jakarta';
 const pendingExpenses = new Map();
 
 // Command handlers
@@ -43,7 +45,7 @@ async function handleCategoryInput(message, userId, text) {
         amount: Number(expenseData.amount),
         category,
         description: expenseData.description,
-        date: new Date().toISOString()
+        date: moment().tz(TIMEZONE).toISOString()
     });
 
     await message.reply(MESSAGES.EXPENSE_ADDED.replace('{amount}', expenseData.amount).replace('{description}', expenseData.description).replace('{category}', category));
