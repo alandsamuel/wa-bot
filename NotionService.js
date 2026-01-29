@@ -215,9 +215,6 @@ class NotionService {
                 },
                 [PO_PROPERTIES.DP]: {
                     number: poData.dp
-                },
-                [PO_PROPERTIES.PELUNAS]: {
-                    number: poData.pelunas
                 }
             };
 
@@ -236,21 +233,8 @@ class NotionService {
                 };
             }
 
-            if (poData.statusLunas && poData.statusLunas.toLowerCase() !== 'skip') {
-                properties[PO_PROPERTIES.STATUS_LUNAS] = {
-                    select: {
-                        name: poData.statusLunas
-                    }
-                };
-            }
-
-            if (poData.arrived && poData.arrived.toLowerCase() !== 'skip') {
-                properties[PO_PROPERTIES.ARRIVED] = {
-                    select: {
-                        name: poData.arrived
-                    }
-                };
-            }
+            // Note: Pelunas, Status Lunas, and Arrived are formula/calculated fields in Notion
+            // They don't need to be set here as they're automatically calculated
 
             const response = await this.notion.pages.create({
                 parent: { data_source_id: this.po_database_id },

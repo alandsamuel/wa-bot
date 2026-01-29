@@ -2,6 +2,7 @@ const { Client } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const config = require('./config');
 const { COMMANDS, REACTIONS, MESSAGES } = require('./constants');
+const { parsePriceWithK } = require('./helper');
 const {
     pendingExpenses,
     handleListCommand,
@@ -70,10 +71,10 @@ async function handlePOInput(message, userId, text) {
                 break;
 
             case 4:
-                // Full Price
-                const fullPrice = parseFloat(text.replace(/,/g, '.'));
+                // Full Price (with k support)
+                const fullPrice = parsePriceWithK(text);
                 if (isNaN(fullPrice)) {
-                    await message.reply('❌ Please enter a valid number for Full Price');
+                    await message.reply('❌ Please enter a valid number for Full Price (e.g., 500000 or 500k)');
                     return;
                 }
                 poData.fullPrice = fullPrice;
@@ -82,39 +83,13 @@ async function handlePOInput(message, userId, text) {
                 break;
 
             case 5:
-                // DP
-                const dp = parseFloat(text.replace(/,/g, '.'));
+                // DP (with k support) - Final step
+                const dp = parsePriceWithK(text);
                 if (isNaN(dp)) {
-                    await message.reply('❌ Please enter a valid number for DP');
+                    await message.reply('❌ Please enter a valid number for DP (e.g., 100000 or 100k)');
                     return;
                 }
                 poData.dp = dp;
-                pendingPOs.set(userId, poData);
-                await message.reply(MESSAGES.PO_ASKING_PELUNAS);
-                break;
-
-            case 6:
-                // Pelunas
-                const pelunas = parseFloat(text.replace(/,/g, '.'));
-                if (isNaN(pelunas)) {
-                    await message.reply('❌ Please enter a valid number for Pelunas');
-                    return;
-                }
-                poData.pelunas = pelunas;
-                pendingPOs.set(userId, poData);
-                await message.reply(MESSAGES.PO_ASKING_STATUS_LUNAS);
-                break;
-
-            case 7:
-                // Status Lunas
-                poData.statusLunas = text;
-                pendingPOs.set(userId, poData);
-                await message.reply(MESSAGES.PO_ASKING_ARRIVED);
-                break;
-
-            case 8:
-                // Arrived - Final step
-                poData.arrived = text;
                 console.log('Adding PO:', poData);
 
                 await notionService.addPO(poData);

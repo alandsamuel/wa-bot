@@ -1,5 +1,6 @@
 const notionService = require('./NotionService');
 const { COMMANDS, MESSAGES } = require('./constants');
+const { parsePriceWithK } = require('./helper');
 
 const moment = require('moment-timezone');
 
@@ -117,10 +118,7 @@ async function handleReceiptConfirmation(message, userId, text) {
 function parseExpense(text) {
     const match = text.match(/(.+?)\s+(\d+(?:,\d+|\.\d+)?[k|K]?)$/i);
     if (match) {
-        let amount = match[2].replace(/,/g, '.');
-        if (amount.toLowerCase().endsWith('k')) {
-            amount = amount.slice(0, -1) + '000';
-        }
+        const amount = parsePriceWithK(match[2]);
         const description = match[1].trim();
         return { description, amount };
     }
