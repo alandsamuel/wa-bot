@@ -3,7 +3,8 @@ const COMMANDS = {
     LIST: '!list',
     TODAY: '!today',
     CANCEL: 'cancel',
-    NOTION_LINK: '!notionlink'
+    NOTION_LINK: '!notionlink',
+    PO: '!po'
 };
 
 // Reactions
@@ -17,6 +18,19 @@ const NOTION_PROPERTIES = {
     AMOUNT: 'Amount',
     CATEGORY: 'Category',
     DATE: 'Date'
+};
+
+// PO Tracker Database Properties
+const PO_PROPERTIES = {
+    NAME: 'Name',
+    TOKO: 'Toko',
+    LINKS: 'Links',
+    RELEASE_DATE: 'Release Date',
+    FULL_PRICE: 'Full Price',
+    DP: 'DP',
+    PELUNAS: 'Pelunas',
+    STATUS_LUNAS: 'Status Lunas',
+    ARRIVED: 'Arrived ?'
 };
 
 // Date Locale
@@ -71,7 +85,25 @@ const MESSAGES = {
     ERROR_HANDLER: 'Error in message handler:',
     FAILED_RETRIEVE_EXPENSES: 'Failed to retrieve expenses from Notion',
     FAILED_ADD_EXPENSE: 'Failed to add expense to Notion',
-    FAILED_FETCH_CATEGORIES: 'Failed to fetch categories from Notion'
+    FAILED_FETCH_CATEGORIES: 'Failed to fetch categories from Notion',
+
+    // PO Tracker
+    PO_WELCOME: '📦 Welcome to PO Tracker!\n\nPlease provide the following details:\n\n1️⃣ Item Name: ',
+    PO_ASKING_TOKO: '2️⃣ Store/Toko: ',
+    PO_ASKING_LINKS: '3️⃣ Product Links (or type "skip"): ',
+    PO_ASKING_RELEASE_DATE: '4️⃣ Release Date (YYYY-MM-DD or type "skip"): ',
+    PO_ASKING_FULL_PRICE: '5️⃣ Full Price: ',
+    PO_ASKING_DP: '6️⃣ Down Payment (DP): ',
+    PO_ASKING_PELUNAS: '7️⃣ Remaining Payment (Pelunas): ',
+    PO_ASKING_STATUS_LUNAS: '8️⃣ Payment Status (Lunas/Pending/Partial or type "skip"): ',
+    PO_ASKING_ARRIVED: '9️⃣ Has it arrived? (Yes/No or type "skip"): ',
+    PO_ADDED: '✅ Pre-order added successfully!\n\n📦 Item: {name}\n🏪 Toko: {toko}\n💰 Full Price: {fullPrice}',
+    PO_CANCELLED: '❌ Pre-order addition cancelled.',
+    NO_POS_FOUND: 'No pre-orders found.',
+    POS_HEADER: 'Here are your ongoing pre-orders:',
+    PO_ITEM: '📦 {name}\n🏪 {toko}\n💰 Full: Rp. {fullPrice} | DP: Rp. {dp} | Pelunas: Rp. {pelunas}\n📅 Release: {releaseDate}\n✈️ Arrived: {arrived}\n',
+    FAILED_RETRIEVE_POS: 'Failed to retrieve pre-orders from Notion',
+    FAILED_ADD_PO: 'Failed to add pre-order to Notion'
 };
 
 // Date Format Options
@@ -84,6 +116,7 @@ module.exports = {
     COMMANDS,
     REACTIONS,
     NOTION_PROPERTIES,
+    PO_PROPERTIES,
     DATE_LOCALE,
     MESSAGES,
     DATE_FORMAT_OPTIONS

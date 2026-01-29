@@ -125,7 +125,8 @@ The test will display extracted receipt data and formatted output.
 | `!today`                  | Show today's expenses       | Displays all expenses for today with daily total   |
 | `!notionlink`             | Get Notion link             | Shares your Notion database link                   |
 | `!summarize`              | Monthly summary by category | Shows expenses breakdown by category               |
-| `cancel`                  | Cancel pending expense      | Cancels expense addition when waiting for category |
+| `!po`                     | Add pre-order (PO)          | Start interactive flow to track pre-orders         |
+| `cancel`                  | Cancel pending input        | Cancels expense/PO addition when waiting for input |
 | Send receipt image        | Process receipt             | Extracts data and stores in Notion                 |
 
 ### Expense Format

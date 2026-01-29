@@ -18,6 +18,126 @@ const notionService = require('./NotionService');
 
 const client = new Client(config.clientOptions);
 
+const pendingPOs = new Map();
+
+async function handlePOCommand(message, userId) {
+    console.log('Handling PO command');
+    pendingPOs.set(userId, {});
+    await message.reply(MESSAGES.PO_WELCOME);
+}
+
+async function handlePOInput(message, userId, text) {
+    const poData = pendingPOs.get(userId);
+
+    if (text === COMMANDS.CANCEL) {
+        console.log('PO addition cancelled by user');
+        await message.reply(MESSAGES.PO_CANCELLED);
+        pendingPOs.delete(userId);
+        return;
+    }
+
+    // Determine which step we're at
+    const step = Object.keys(poData).length;
+
+    try {
+        switch (step) {
+            case 0:
+                // Name
+                poData.name = text;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_TOKO);
+                break;
+
+            case 1:
+                // Toko
+                poData.toko = text;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_LINKS);
+                break;
+
+            case 2:
+                // Links
+                poData.links = text;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_RELEASE_DATE);
+                break;
+
+            case 3:
+                // Release Date
+                poData.releaseDate = text;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_FULL_PRICE);
+                break;
+
+            case 4:
+                // Full Price
+                const fullPrice = parseFloat(text.replace(/,/g, '.'));
+                if (isNaN(fullPrice)) {
+                    await message.reply('❌ Please enter a valid number for Full Price');
+                    return;
+                }
+                poData.fullPrice = fullPrice;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_DP);
+                break;
+
+            case 5:
+                // DP
+                const dp = parseFloat(text.replace(/,/g, '.'));
+                if (isNaN(dp)) {
+                    await message.reply('❌ Please enter a valid number for DP');
+                    return;
+                }
+                poData.dp = dp;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_PELUNAS);
+                break;
+
+            case 6:
+                // Pelunas
+                const pelunas = parseFloat(text.replace(/,/g, '.'));
+                if (isNaN(pelunas)) {
+                    await message.reply('❌ Please enter a valid number for Pelunas');
+                    return;
+                }
+                poData.pelunas = pelunas;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_STATUS_LUNAS);
+                break;
+
+            case 7:
+                // Status Lunas
+                poData.statusLunas = text;
+                pendingPOs.set(userId, poData);
+                await message.reply(MESSAGES.PO_ASKING_ARRIVED);
+                break;
+
+            case 8:
+                // Arrived - Final step
+                poData.arrived = text;
+                console.log('Adding PO:', poData);
+
+                await notionService.addPO(poData);
+                await message.reply(MESSAGES.PO_ADDED
+                    .replace('{name}', poData.name)
+                    .replace('{toko}', poData.toko)
+                    .replace('{fullPrice}', poData.fullPrice));
+
+                pendingPOs.delete(userId);
+                break;
+        }
+    } catch (error) {
+        console.error('Error in PO input handling:', error);
+        await message.reply(MESSAGES.ERROR_MESSAGE.replace('{error}', error.message));
+    }
+}
+
+async function handleListPOCommand(message) {
+    console.log('Handling PO list command');
+    const response = await notionService.listPOs();
+    await message.reply(response);
+}
+
 client.on('ready', () => {
     console.log(MESSAGES.BOT_READY);
     console.log(MESSAGES.BOT_PHONE, client.info.wid.user);
@@ -72,6 +192,13 @@ client.on('message', async (message) => {
             return;
         }
 
+        // Handle pending PO input
+        if (pendingPOs.has(userId)) {
+            console.log('Handling PO input for pending PO');
+            await handlePOInput(message, userId, text);
+            return;
+        }
+
         console.log('Processing command or expense input...');
         await message.react('⏳');
 
@@ -85,6 +212,9 @@ client.on('message', async (message) => {
                 break;
             case COMMANDS.NOTION_LINK:
                 await handleNotionLinkCommand(message);
+                break;
+            case COMMANDS.PO:
+                await handlePOCommand(message, userId);
                 break;
             case "!summarize":
                 await handleSummarizeCommand(message);
