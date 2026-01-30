@@ -223,14 +223,20 @@ class NotionService {
 
             if (poData.releaseDate && poData.releaseDate.toLowerCase() !== 'skip') {
                 properties[PO_PROPERTIES.RELEASE_DATE] = {
-                    date: {
-                        start: poData.releaseDate
-                    }
+                    rich_text: [
+                        {
+                            text: {
+                                content: poData.releaseDate
+                            }
+                        }
+                    ]
                 };
             }
 
             // Note: Pelunas, Status Lunas, and Arrived are formula/calculated fields in Notion
             // They don't need to be set here as they're automatically calculated
+
+            console.log('Creating PO with properties:', properties);
 
             const response = await this.notion.pages.create({
                 parent: { database_id: this.po_database_id },

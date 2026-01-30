@@ -91,7 +91,7 @@ const MESSAGES = {
     PO_WELCOME: '📦 Welcome to PO Tracker!\n\nPlease provide the following details:\n\n1️⃣ Item Name: ',
     PO_ASKING_TOKO: '2️⃣ Store/Toko: ',
     PO_ASKING_LINKS: '3️⃣ Product Links (or type "skip"): ',
-    PO_ASKING_RELEASE_DATE: '4️⃣ Release Date (YYYY-MM-DD or type "skip"): ',
+    PO_ASKING_RELEASE_DATE: '4️⃣ Release Date (YYYY-MM-DD, Q1 2026 or type "skip"): ',
     PO_ASKING_FULL_PRICE: '5️⃣ Full Price (e.g., 500000 or 500k): ',
     PO_ASKING_DP: '6️⃣ Down Payment/DP (e.g., 100000 or 100k): ',
     PO_ADDED: '✅ Pre-order added successfully!\n\n📦 Item: {name}\n🏪 Toko: {toko}\n💰 Full Price: Rp. {fullPrice}',
