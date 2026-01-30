@@ -139,9 +139,10 @@ function formatReceiptMessage(receiptData) {
  * @returns {Object} Formatted data for Notion
  */
 function extractReceiptForNotion(receiptData) {
-    const vendor = receiptData.meta?.vendor?.name || receiptData.vendor?.name || 'Receipt';
+    // Handle both nested value structure and direct values
+    const vendor = receiptData.vendor?.name?.value || receiptData.vendor?.name || 'Receipt';
     const total = receiptData?.total?.value || 0;
-    const receiptDate = receiptData.meta?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
+    const receiptDate = receiptData?.date?.value || moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     return {
         description: vendor,

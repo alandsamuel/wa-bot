@@ -202,13 +202,9 @@ class NotionService {
                     ]
                 },
                 [PO_PROPERTIES.TOKO]: {
-                    rich_text: [
-                        {
-                            text: {
-                                content: poData.toko
-                            }
-                        }
-                    ]
+                    select: {
+                        name: poData.toko
+                    }
                 },
                 [PO_PROPERTIES.FULL_PRICE]: {
                     number: poData.fullPrice
@@ -237,7 +233,7 @@ class NotionService {
             // They don't need to be set here as they're automatically calculated
 
             const response = await this.notion.pages.create({
-                parent: { data_source_id: this.po_database_id },
+                parent: { database_id: this.po_database_id },
                 properties: properties
             });
 
