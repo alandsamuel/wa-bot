@@ -11,7 +11,8 @@ const {
     handleCategoryInput,
     handleExpenseInput,
     handleSummarizeCommand,
-    handleReceiptConfirmation
+    handleReceiptConfirmation,
+    handleListPOsCommand
 } = require('./handler');
 const { initializeCron, stopCron } = require('./cron');
 const { handleReceiptMessage } = require('./receipt');
@@ -187,6 +188,9 @@ client.on('message', async (message) => {
                 break;
             case COMMANDS.NOTION_LINK:
                 await handleNotionLinkCommand(message);
+                break;
+            case '!po list':
+                await handleListPOsCommand(message);
                 break;
             case COMMANDS.PO:
                 await handlePOCommand(message, userId);

@@ -126,6 +126,7 @@ The test will display extracted receipt data and formatted output.
 | `!notionlink`             | Get Notion link             | Shares your Notion database link                   |
 | `!summarize`              | Monthly summary by category | Shows expenses breakdown by category               |
 | `!po`                     | Add pre-order (PO)          | Start interactive flow to track pre-orders         |
+| `!po list`                | List all pre-orders         | Shows all pre-orders with details                  |
 | `cancel`                  | Cancel pending input        | Cancels expense/PO addition when waiting for input |
 | Send receipt image        | Process receipt             | Extracts data and stores in Notion                 |
 
@@ -150,10 +151,14 @@ The bot will ask you to select a category from your existing categories in Notio
 Simply send a receipt image to the bot and it will:
 
 1. Extract data using Veryfi (vendor, total amount, items, date)
-2. Automatically store in your Notion database under "Receipt" category
-3. Send you a formatted summary with extracted details
+2. Send you a formatted summary with extracted details
+3. Ask you to confirm or modify the vendor description
+4. Ask you to select a category from available categories
+5. Store the receipt in your Notion database with the confirmed details
 
 Supported image formats: JPEG, PNG, WebP, GIF, BMP
+
+**Flow is identical to manual expenses** - you have full control over the description and category before storing.
 
 ## Docker Support
 

@@ -64,7 +64,7 @@ const MESSAGES = {
     INVALID_CATEGORY_RESPONSE: '❌ Invalid category!\n\nAvailable categories:\n{categories}\n\nPlease enter a valid category:\n\nor type \'cancel\' to abort.',
     EXPENSE_ADDED: '✅ Expense added: {amount} - {description}\n📁 Category: {category}',
     EXPENSE_DETECTED_PROMPT: '📝 Expense detected: {description}\n💰 Amount: {amount}\n\nAvailable categories:\n{categories}\n\nPlease enter the category: \n or type \'cancel\' to abort.',
-    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List recent expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary\n• !notionlink - Get Notion Data link\n• Send receipt image - Process receipt with Veryfi',
+    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary by category\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
 
     // List expenses
     NO_EXPENSES_FOUND: 'No expenses found.',

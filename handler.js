@@ -131,6 +131,12 @@ async function handleSummarizeCommand(message) {
     await message.reply(response);
 }
 
+async function handleListPOsCommand(message) {
+    console.log('Handling list POs command');
+    const response = await notionService.listPOs();
+    await message.reply(response);
+}
+
 module.exports = {
     pendingExpenses,
     handleListCommand,
@@ -140,5 +146,4 @@ module.exports = {
     handleExpenseInput,
     handleSummarizeCommand,
     handleReceiptConfirmation,
-    parseExpense
-};
+    handleListPOsCommand,
