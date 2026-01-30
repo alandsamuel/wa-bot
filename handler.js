@@ -146,4 +146,5 @@ module.exports = {
     handleExpenseInput,
     handleSummarizeCommand,
     handleReceiptConfirmation,
-    handleListPOsCommand,
+    handleListPOsCommand
+}
