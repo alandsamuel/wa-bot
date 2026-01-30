@@ -26,7 +26,7 @@ const PO_PROPERTIES = {
     TOKO: 'Toko',
     LINKS: 'Links',
     RELEASE_DATE: 'Release Date',
-    FULL_PRICE: 'Full Price',
+    FULL_PRICE: 'Price',
     DP: 'DP',
     PELUNAS: 'Pelunas',
     STATUS_LUNAS: 'Status Lunas',

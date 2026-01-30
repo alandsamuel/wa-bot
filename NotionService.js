@@ -207,10 +207,10 @@ class NotionService {
                     }
                 },
                 [PO_PROPERTIES.FULL_PRICE]: {
-                    number: poData.fullPrice
+                    number: Number(poData.fullPrice)
                 },
                 [PO_PROPERTIES.DP]: {
-                    number: poData.dp
+                    number: Number(poData.dp)
                 }
             };
 
