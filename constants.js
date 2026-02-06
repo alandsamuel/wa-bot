@@ -4,7 +4,8 @@ const COMMANDS = {
     TODAY: '!today',
     CANCEL: 'cancel',
     NOTION_LINK: '!notionlink',
-    PO: '!po'
+    PO: '!po',
+    WISHLIST: '!wishlist'
 };
 
 // Reactions
@@ -31,6 +32,18 @@ const PO_PROPERTIES = {
     PELUNAS: 'Pelunas',
     STATUS_LUNAS: 'Status Lunas',
     ARRIVED: 'Arrived ?'
+};
+
+// Wishlist Database Properties
+const WISHLIST_PROPERTIES = {
+    NAME: 'Name',
+    PRICE: 'Price',
+    URL: 'URL',
+    ATTACHMENT: 'Attachment',
+    NOTE: 'Note',
+    PRIORITY: 'Priority',
+    CATEGORY: 'Category',
+    LAST_EDITED: 'Last Edited'
 };
 
 // Date Locale
@@ -64,7 +77,25 @@ const MESSAGES = {
     INVALID_CATEGORY_RESPONSE: '❌ Invalid category!\n\nAvailable categories:\n{categories}\n\nPlease enter a valid category:\n\nor type \'cancel\' to abort.',
     EXPENSE_ADDED: '✅ Expense added: {amount} - {description}\n📁 Category: {category}',
     EXPENSE_DETECTED_PROMPT: '📝 Expense detected: {description}\n💰 Amount: {amount}\n\nAvailable categories:\n{categories}\n\nPlease enter the category: \n or type \'cancel\' to abort.',
-    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary by category\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
+    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary by category\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !wishlist - Add wishlist item\n• !wishlist list - List all wishlist items\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
+
+    // Wishlist
+    WISHLIST_WELCOME: '🛍️ Welcome to Wishlist!\n\nPlease provide the following details:\n\n1️⃣ Item Name: ',
+    WISHLIST_ASKING_PRICE: '2️⃣ Price (e.g., 500000 or 500k): ',
+    WISHLIST_ASKING_URL: '3️⃣ Product URL (or type "skip"): ',
+    WISHLIST_ASKING_NOTE: '4️⃣ Note (or type "skip"): ',
+    WISHLIST_ASKING_PRIORITY: '5️⃣ Priority (or type "skip"): ',
+    WISHLIST_ASKING_CATEGORY: '6️⃣ Category (or type "skip"): ',
+    WISHLIST_ADDED: '✅ Wishlist item added successfully!\n\n🛍️ Item: {name}\n💰 Price: Rp. {price}',
+    WISHLIST_CANCELLED: '❌ Wishlist addition cancelled.',
+    WISHLIST_DUPLICATE: '❌ An item with the name "{name}" already exists in your wishlist. Please use a different name.',
+    WISHLIST_INVALID_PRICE: '❌ Please enter a valid number for Price (e.g., 500000 or 500k)',
+    NO_WISHLIST_ITEMS_FOUND: 'No wishlist items found.',
+    WISHLIST_ITEMS_HEADER: 'Here are your wishlist items:',
+    WISHLIST_ITEM: '🛍️ {name}\n💰 Price: Rp. {price}\n{optionalFields}',
+    FAILED_RETRIEVE_WISHLIST: 'Failed to retrieve wishlist items from Notion',
+    FAILED_ADD_WISHLIST: 'Failed to add wishlist item to Notion',
+    FAILED_CHECK_DUPLICATE_WISHLIST: 'Failed to check for duplicate wishlist names',
 
     // List expenses
     NO_EXPENSES_FOUND: 'No expenses found.',
@@ -114,6 +145,7 @@ module.exports = {
     REACTIONS,
     NOTION_PROPERTIES,
     PO_PROPERTIES,
+    WISHLIST_PROPERTIES,
     DATE_LOCALE,
     MESSAGES,
     DATE_FORMAT_OPTIONS

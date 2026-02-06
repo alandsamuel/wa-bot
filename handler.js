@@ -6,6 +6,7 @@ const moment = require('moment-timezone');
 
 const TIMEZONE = 'Asia/Jakarta';
 const pendingExpenses = new Map();
+const pendingWishlistItems = new Map();
 
 // Command handlers
 async function handleListCommand(message) {
@@ -137,8 +138,100 @@ async function handleListPOsCommand(message) {
     await message.reply(response);
 }
 
+async function handleWishlistCommand(message, userId) {
+    console.log('Handling wishlist command');
+    pendingWishlistItems.set(userId, {});
+    await message.reply(MESSAGES.WISHLIST_WELCOME);
+}
+
+async function handleWishlistInput(message, userId, text) {
+    const wishlistData = pendingWishlistItems.get(userId);
+
+    if (text === COMMANDS.CANCEL) {
+        console.log('Wishlist addition cancelled by user');
+        await message.reply(MESSAGES.WISHLIST_CANCELLED);
+        pendingWishlistItems.delete(userId);
+        return;
+    }
+
+    // Determine which step we're at
+    const step = Object.keys(wishlistData).length;
+
+    try {
+        switch (step) {
+            case 0:
+                // Name - Check for duplicates
+                const isDuplicate = await notionService.checkDuplicateWishlistName(text);
+                if (isDuplicate) {
+                    await message.reply(MESSAGES.WISHLIST_DUPLICATE.replace('{name}', text));
+                    return;
+                }
+                wishlistData.name = text;
+                pendingWishlistItems.set(userId, wishlistData);
+                await message.reply(MESSAGES.WISHLIST_ASKING_PRICE);
+                break;
+
+            case 1:
+                // Price (with k support)
+                const price = parsePriceWithK(text);
+                if (isNaN(price)) {
+                    await message.reply(MESSAGES.WISHLIST_INVALID_PRICE);
+                    return;
+                }
+                wishlistData.price = price;
+                pendingWishlistItems.set(userId, wishlistData);
+                await message.reply(MESSAGES.WISHLIST_ASKING_URL);
+                break;
+
+            case 2:
+                // URL (optional)
+                wishlistData.url = text;
+                pendingWishlistItems.set(userId, wishlistData);
+                await message.reply(MESSAGES.WISHLIST_ASKING_NOTE);
+                break;
+
+            case 3:
+                // Note (optional)
+                wishlistData.note = text;
+                pendingWishlistItems.set(userId, wishlistData);
+                await message.reply(MESSAGES.WISHLIST_ASKING_PRIORITY);
+                break;
+
+            case 4:
+                // Priority (optional)
+                wishlistData.priority = text;
+                pendingWishlistItems.set(userId, wishlistData);
+                await message.reply(MESSAGES.WISHLIST_ASKING_CATEGORY);
+                break;
+
+            case 5:
+                // Category (optional) - Final step
+                wishlistData.category = text;
+                console.log('Adding wishlist item:', wishlistData);
+
+                await notionService.addWishlistItem(wishlistData);
+                await message.reply(MESSAGES.WISHLIST_ADDED
+                    .replace('{name}', wishlistData.name)
+                    .replace('{price}', wishlistData.price));
+
+                pendingWishlistItems.delete(userId);
+                break;
+        }
+    } catch (error) {
+        console.error('Error in wishlist input handling:', error);
+        await message.reply(MESSAGES.ERROR_MESSAGE.replace('{error}', error.message));
+    }
+}
+
+async function handleListWishlistCommand(message) {
+    console.log('Handling wishlist list command');
+    const response = await notionService.listWishlistItems();
+    await message.reply(response);
+}
+
 module.exports = {
     pendingExpenses,
+    pendingWishlistItems,
     handleListCommand,
     handleTodayCommand,
     handleNotionLinkCommand,
@@ -146,5 +239,8 @@ module.exports = {
     handleExpenseInput,
     handleSummarizeCommand,
     handleReceiptConfirmation,
-    handleListPOsCommand
+    handleListPOsCommand,
+    handleWishlistCommand,
+    handleWishlistInput,
+    handleListWishlistCommand
 }

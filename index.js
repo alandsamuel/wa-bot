@@ -5,6 +5,7 @@ const { COMMANDS, REACTIONS, MESSAGES } = require('./constants');
 const { parsePriceWithK } = require('./helper');
 const {
     pendingExpenses,
+    pendingWishlistItems,
     handleListCommand,
     handleTodayCommand,
     handleNotionLinkCommand,
@@ -12,7 +13,10 @@ const {
     handleExpenseInput,
     handleSummarizeCommand,
     handleReceiptConfirmation,
-    handleListPOsCommand
+    handleListPOsCommand,
+    handleWishlistCommand,
+    handleWishlistInput,
+    handleListWishlistCommand
 } = require('./handler');
 const { initializeCron, stopCron } = require('./cron');
 const { handleReceiptMessage } = require('./receipt');
@@ -175,6 +179,13 @@ client.on('message', async (message) => {
             return;
         }
 
+        // Handle pending wishlist input
+        if (pendingWishlistItems.has(userId)) {
+            console.log('Handling wishlist input for pending wishlist item');
+            await handleWishlistInput(message, userId, text);
+            return;
+        }
+
         console.log('Processing command or expense input...');
         await message.react('⏳');
 
@@ -194,6 +205,12 @@ client.on('message', async (message) => {
                 break;
             case COMMANDS.PO:
                 await handlePOCommand(message, userId);
+                break;
+            case '!wishlist list':
+                await handleListWishlistCommand(message);
+                break;
+            case COMMANDS.WISHLIST:
+                await handleWishlistCommand(message, userId);
                 break;
             case "!summarize":
                 await handleSummarizeCommand(message);
