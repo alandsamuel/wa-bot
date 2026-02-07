@@ -18,7 +18,29 @@ async function handleListCommand(message) {
 async function handleTodayCommand(message) {
     console.log('Handling today command');
     const response = await notionService.todayExpenses();
-    await message.reply(response);
+
+    // If NotionService returns a pre-formatted string, send it directly
+    if (typeof response === 'string') {
+        await message.reply(response);
+        return;
+    }
+
+    // Format structured response into a readable message
+    const addThousandSeparator = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let msg = MESSAGES.EXPENSES_HEADER + '\n';
+    const dateLabel = new Date().toLocaleDateString();
+    msg += MESSAGES.EXPENSES_FOR_TODAY.replace('{date}', dateLabel) + '\n\n';
+
+    if (response.count === 0) {
+        msg = MESSAGES.NO_EXPENSES_FOUND;
+    } else {
+        response.expenses.forEach((e) => {
+            msg += MESSAGES.EXPENSE_ITEM.replace('{name}', e.description).replace('{amount}', addThousandSeparator(e.amount)).replace('{date}', e.date || '-') + '\n';
+        });
+        msg += MESSAGES.TOTAL_EXPENSES.replace('{total}', addThousandSeparator(response.total));
+    }
+
+    await message.reply(msg);
 }
 
 async function handleNotionLinkCommand(message) {
@@ -129,7 +151,22 @@ function parseExpense(text) {
 async function handleSummarizeCommand(message) {
     console.log('Handling summarize command');
     const response = await notionService.summarizeExpenses();
-    await message.reply(response);
+
+    if (typeof response === 'string') {
+        await message.reply(response);
+        return;
+    }
+
+    const addThousandSeparator = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    let msg = `📊 Summary for ${response.period}\n\n`;
+    msg += `Total: Rp. ${addThousandSeparator(response.total)}\n`;
+    msg += `Count: ${response.count}\n\n`;
+    msg += 'By category:\n';
+    for (const [cat, amt] of Object.entries(response.byCategory)) {
+        msg += `- ${cat}: Rp. ${addThousandSeparator(amt)}\n`;
+    }
+
+    await message.reply(msg);
 }
 
 async function handleListPOsCommand(message) {

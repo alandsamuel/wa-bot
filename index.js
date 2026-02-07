@@ -252,4 +252,13 @@ client.on('message', async (message) => {
 });
 
 
-client.initialize();
+// Export PO handlers for testing and avoid starting the client when required as a module
+module.exports = {
+    handlePOCommand,
+    handlePOInput,
+    handleListPOCommand
+};
+
+if (require.main === module) {
+    client.initialize();
+}

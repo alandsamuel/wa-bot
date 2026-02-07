@@ -141,6 +141,61 @@ class NotionService {
         }
     }
 
+    async todayExpenses() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.data_source_id,
+                filter: {
+                    and: [
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_after: startDate
+                            }
+                        },
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_before: endDate
+                            }
+                        }
+                    ]
+                },
+                sorts: [
+                    {
+                        property: NOTION_PROPERTIES.DATE,
+                        direction: 'descending'
+                    }
+                ]
+            });
+
+            const expenses = response.results.map((page) => {
+                const props = page.properties;
+                return {
+                    id: page.id,
+                    amount: props[NOTION_PROPERTIES.AMOUNT]?.number || 0,
+                    category: props[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized',
+                    description: props[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description',
+                    date: props[NOTION_PROPERTIES.DATE]?.date?.start || null
+                };
+            });
+
+            const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+            return {
+                total,
+                count: expenses.length,
+                expenses
+            };
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
     async listPOs() {
         try {
             const response = await this.notion.dataSources.query({
@@ -251,6 +306,57 @@ class NotionService {
         } catch (error) {
             console.error(MESSAGES.ERROR_HANDLER, error);
             throw new Error(MESSAGES.FAILED_ADD_PO);
+        }
+    }
+
+    async summarizeExpenses() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.data_source_id,
+                filter: {
+                    and: [
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_after: startDate
+                            }
+                        },
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_before: endDate
+                            }
+                        }
+                    ]
+                }
+            });
+
+            const byCategory = {};
+            let total = 0;
+
+            response.results.forEach((page) => {
+                const props = page.properties;
+                const category = props[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized';
+                const amount = props[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+                total += amount;
+                byCategory[category] = (byCategory[category] || 0) + amount;
+            });
+
+            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
+
+            return {
+                total,
+                count: response.results.length,
+                byCategory,
+                period: monthYear
+            };
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
         }
     }
 
