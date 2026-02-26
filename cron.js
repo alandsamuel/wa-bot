@@ -19,24 +19,58 @@ async function getYesterdayExpenses() {
     const endDate = yesterday.clone().endOf('day').toISOString();
 
     try {
-        const response = await notionService.fetchData(startDate, endDate);
+        const response = await notionService.notion.dataSources.query({
+            data_source_id: notionService.data_source_id,
+            filter: {
+                and: [
+                    {
+                        property: 'Date',
+                        date: {
+                            on_or_after: startDate
+                        }
+                    },
+                    {
+                        property: 'Date',
+                        date: {
+                            on_or_before: endDate
+                        }
+                    }
+                ]
+            }
+        });
 
         if (response.results.length === 0) {
             return MESSAGES.NO_EXPENSES_FOUND;
         }
+
+        const byCategory = {};
+        const expenses = [];
+
+        response.results.forEach((page) => {
+            const props = page.properties;
+            const name = props['Name']?.title[0]?.text?.content || 'No description';
+            const amount = props['Amount']?.number || 0;
+            const category = props['Category']?.select?.name || 'Uncategorized';
+            
+            expenses.push({ name, amount, category });
+            byCategory[category] = (byCategory[category] || 0) + amount;
+        });
 
         const dateStr = yesterday.format('ddd, MMM D, YYYY');
         let message = MESSAGES.EXPENSES_HEADER + '\n';
         message += `📊 Yesterday's Expenses (${dateStr})\n`;
         message += `${'='.repeat(60)}\n\n`;
 
+        message += '📁 By Category:\n';
+        for (const [category, total] of Object.entries(byCategory)) {
+            message += `   • ${category}: Rp. ${notionService.addThousandSeparator(total)}\n`;
+        }
+
+        message += `\n📋 All Expenses:\n`;
         let totalExpenses = 0;
-        response.results.forEach((page) => {
-            const properties = page.properties;
-            const name = properties['Name']?.title[0]?.text?.content || 'No description';
-            const amount = properties['Amount']?.number || 0;
-            message += `   • ${name} - Rp. ${notionService.addThousandSeparator(amount)}\n`;
-            totalExpenses += amount;
+        expenses.forEach((expense) => {
+            message += `   • ${expense.name} - Rp. ${notionService.addThousandSeparator(expense.amount)}\n`;
+            totalExpenses += expense.amount;
         });
 
         message += `\n${'='.repeat(60)}\n`;
