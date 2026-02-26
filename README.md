@@ -7,11 +7,15 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 - ✅ **Expense Tracking**: Send expenses in natural format (e.g., "makan nasi padang 20000")
 - 📋 **List Monthly Expenses**: View monthly expenses summary with `!list` command
 - 📅 **Today's Expenses**: Check today's expenses with `!today` command
+- � **Monthly Summary**: Breakdown expenses by category with `!summarize` command
 - 📊 **Daily Summary**: Automatic daily summary of yesterday's expenses sent at midnight
-- � **Receipt Processing**: Send receipt images for automatic data extraction and Notion storage
-- �🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
+- 🧾 **Receipt Processing**: Send receipt images for automatic data extraction and Notion storage
+- 🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
+- 📦 **Pre-Order Tracking**: Track purchase orders with `!po` and `!po list` commands
+- 🛍️ **Wishlist Management**: Manage wishlist items with `!wishlist` and `!wishlist list` commands
 - 🏷️ **Category Management**: Automatically categorize expenses from predefined categories
-- 💾 **Notion Integration**: All expenses stored in your Notion database
+- 💾 **Notion Integration**: All data stored in your Notion database
+- 🧪 **Comprehensive Testing**: End-to-end and unit tests for all commands
 - 🔐 **Whitelisted Access**: Only whitelisted phone numbers can use the bot
 
 ## Prerequisites
@@ -95,6 +99,29 @@ The bot will display a QR code on first run. Scan it with WhatsApp to authentica
 
 ### Testing
 
+#### Run All Tests
+
+```bash
+npm test
+```
+
+Runs the complete test suite including unit tests and end-to-end tests (78 tests total).
+
+#### Run End-to-End Tests Only
+
+```bash
+npm run test:e2e
+```
+
+Runs end-to-end tests that verify all commands work correctly in isolation. Covers:
+
+- List, today, and summarize expense commands
+- Expense tracking flows (add and cancel)
+- PO (pre-order) add/list flows
+- Wishlist add/list flows
+- Notion link command
+- Cancel operations for all interactive flows
+
 #### Test Notion Integration
 
 ```bash
@@ -118,16 +145,19 @@ The test will display extracted receipt data and formatted output.
 
 ### Commands
 
-| Command                   | Description                 | Example                                            |
-| ------------------------- | --------------------------- | -------------------------------------------------- |
-| `makan nasi padang 20000` | Add expense                 | Stores expense with amount and asks for category   |
-| `!list`                   | List monthly expenses       | Shows all expenses for current month with total    |
-| `!today`                  | Show today's expenses       | Displays all expenses for today with daily total   |
-| `!notionlink`             | Get Notion link             | Shares your Notion database link                   |
-| `!summarize`              | Monthly summary by category | Shows expenses breakdown by category               |
-| `!po`                     | Add pre-order (PO)          | Start interactive flow to track pre-orders         |
-| `cancel`                  | Cancel pending input        | Cancels expense/PO addition when waiting for input |
-| Send receipt image        | Process receipt             | Extracts data and stores in Notion                 |
+| Command                   | Description                 | Example                                             |
+| ------------------------- | --------------------------- | --------------------------------------------------- |
+| `makan nasi padang 20000` | Add expense                 | Stores expense with amount and asks for category    |
+| `!list`                   | List monthly expenses       | Shows all expenses for current month with total     |
+| `!today`                  | Show today's expenses       | Displays all expenses for today with daily total    |
+| `!summarize`              | Monthly summary by category | Shows expenses breakdown by category                |
+| `!notionlink`             | Get Notion link             | Shares your Notion database link                    |
+| `!po`                     | Add pre-order (PO)          | Start interactive flow to track pre-orders          |
+| `!po list`                | List all pre-orders         | Shows all pre-orders with details                   |
+| `!wishlist`               | Add wishlist item           | Start interactive flow to add items to wishlist     |
+| `!wishlist list`          | List all wishlist items     | Shows all wishlist items with prices                |
+| `cancel`                  | Cancel pending input        | Cancels any pending operation (expense/PO/wishlist) |
+| Send receipt image        | Process receipt             | Extracts data and stores in Notion                  |
 
 ### Expense Format
 
@@ -150,10 +180,14 @@ The bot will ask you to select a category from your existing categories in Notio
 Simply send a receipt image to the bot and it will:
 
 1. Extract data using Veryfi (vendor, total amount, items, date)
-2. Automatically store in your Notion database under "Receipt" category
-3. Send you a formatted summary with extracted details
+2. Send you a formatted summary with extracted details
+3. Ask you to confirm or modify the vendor description
+4. Ask you to select a category from available categories
+5. Store the receipt in your Notion database with the confirmed details
 
 Supported image formats: JPEG, PNG, WebP, GIF, BMP
+
+**Flow is identical to manual expenses** - you have full control over the description and category before storing.
 
 ## Docker Support
 
@@ -175,19 +209,29 @@ The `-v wa-auth:/app/.wwebjs_auth` flag persists WhatsApp session data across co
 
 ```
 wa-bot/
-├── index.js              # Main bot entry point and event listeners
-├── handler.js            # Command handlers and expense parsing logic
-├── cron.js               # Daily summary cron job scheduler
-├── NotionService.js      # Notion database integration and queries
-├── config.js             # Bot configuration
-├── constants.js          # Centralized constants and messages
-├── testListExpenses.js   # Test script for Notion integration
-├── Dockerfile            # Docker configuration
-├── .dockerignore         # Docker build exclusions
-├── .gitignore            # Git exclusions
-├── .env.example          # Environment variables template
-├── package.json          # Project dependencies
-└── pnpm-workspace.yaml   # pnpm workspace config
+├── index.js                    # Main bot entry point and event listeners
+├── handler.js                  # Command handlers and expense parsing logic
+├── cron.js                     # Daily summary cron job scheduler
+├── NotionService.js            # Notion database integration and queries
+├── config.js                   # Bot configuration
+├── constants.js                # Centralized constants and messages
+├── helper.js                   # Helper utilities (price parsing, etc.)
+├── receipt.js                  # Receipt processing logic
+├── Dockerfile                  # Docker configuration
+├── .dockerignore               # Docker build exclusions
+├── .gitignore                  # Git exclusions
+├── .env.example                # Environment variables template
+├── package.json                # Project dependencies
+├── jest.config.js              # Jest testing configuration
+├── pnpm-workspace.yaml         # pnpm workspace config
+├── test/                       # Test suite
+│   ├── test-list-expenses.js   # Notion integration tests
+│   ├── test-receipt.js         # Receipt processing tests
+│   ├── test-price-validation.js# Price parsing tests
+│   ├── test-wishlist.js        # Wishlist functionality tests
+│   └── e2e/                    # End-to-end tests
+│       └── e2e-commands.test.js# Complete command flow tests
+└── README.md                   # This file
 ```
 
 ## Project Features

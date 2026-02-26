@@ -1,5 +1,5 @@
 const { Client } = require('@notionhq/client');
-const { NOTION_PROPERTIES, PO_PROPERTIES, DATE_LOCALE, MESSAGES, DATE_FORMAT_OPTIONS } = require('./constants');
+const { NOTION_PROPERTIES, PO_PROPERTIES, WISHLIST_PROPERTIES, DATE_LOCALE, MESSAGES, DATE_FORMAT_OPTIONS } = require('./constants');
 require('dotenv').config();
 
 class NotionService {
@@ -9,6 +9,7 @@ class NotionService {
         });
         this.data_source_id = process.env.NOTION_DATABASE_ID;
         this.po_database_id = process.env.PO_DATABASE_ID;
+        this.wishlist_database_id = process.env.WISHLIST_DATABASE_ID;
     }
 
     async listExpenses() {
@@ -140,6 +141,61 @@ class NotionService {
         }
     }
 
+    async todayExpenses() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.data_source_id,
+                filter: {
+                    and: [
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_after: startDate
+                            }
+                        },
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_before: endDate
+                            }
+                        }
+                    ]
+                },
+                sorts: [
+                    {
+                        property: NOTION_PROPERTIES.DATE,
+                        direction: 'descending'
+                    }
+                ]
+            });
+
+            const expenses = response.results.map((page) => {
+                const props = page.properties;
+                return {
+                    id: page.id,
+                    amount: props[NOTION_PROPERTIES.AMOUNT]?.number || 0,
+                    category: props[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized',
+                    description: props[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description',
+                    date: props[NOTION_PROPERTIES.DATE]?.date?.start || null
+                };
+            });
+
+            const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+            return {
+                total,
+                count: expenses.length,
+                expenses
+            };
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
     async listPOs() {
         try {
             const response = await this.notion.dataSources.query({
@@ -223,14 +279,20 @@ class NotionService {
 
             if (poData.releaseDate && poData.releaseDate.toLowerCase() !== 'skip') {
                 properties[PO_PROPERTIES.RELEASE_DATE] = {
-                    date: {
-                        start: poData.releaseDate
-                    }
+                    rich_text: [
+                        {
+                            text: {
+                                content: poData.releaseDate
+                            }
+                        }
+                    ]
                 };
             }
 
             // Note: Pelunas, Status Lunas, and Arrived are formula/calculated fields in Notion
             // They don't need to be set here as they're automatically calculated
+
+            console.log('Creating PO with properties:', properties);
 
             const response = await this.notion.pages.create({
                 parent: { database_id: this.po_database_id },
@@ -244,6 +306,194 @@ class NotionService {
         } catch (error) {
             console.error(MESSAGES.ERROR_HANDLER, error);
             throw new Error(MESSAGES.FAILED_ADD_PO);
+        }
+    }
+
+    async summarizeExpenses() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.data_source_id,
+                filter: {
+                    and: [
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_after: startDate
+                            }
+                        },
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_before: endDate
+                            }
+                        }
+                    ]
+                }
+            });
+
+            const byCategory = {};
+            let total = 0;
+
+            response.results.forEach((page) => {
+                const props = page.properties;
+                const category = props[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized';
+                const amount = props[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+                total += amount;
+                byCategory[category] = (byCategory[category] || 0) + amount;
+            });
+
+            const monthYear = new Date(startDate).toLocaleDateString(DATE_LOCALE, DATE_FORMAT_OPTIONS);
+
+            return {
+                total,
+                count: response.results.length,
+                byCategory,
+                period: monthYear
+            };
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
+    async checkDuplicateWishlistName(name) {
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.wishlist_database_id,
+                filter: {
+                    property: WISHLIST_PROPERTIES.NAME,
+                    title: {
+                        equals: name
+                    }
+                }
+            });
+
+            return response.results.length > 0;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_CHECK_DUPLICATE_WISHLIST);
+        }
+    }
+
+    async listWishlistItems() {
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.wishlist_database_id,
+                sorts: [
+                    {
+                        property: WISHLIST_PROPERTIES.NAME,
+                        direction: 'ascending'
+                    }
+                ]
+            });
+
+            if (response.results.length === 0) {
+                return MESSAGES.NO_WISHLIST_ITEMS_FOUND;
+            }
+
+            const addThousandSeparator = (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+
+            let message = MESSAGES.WISHLIST_ITEMS_HEADER + '\n\n';
+
+            response.results.forEach((page) => {
+                const properties = page.properties;
+                const name = properties[WISHLIST_PROPERTIES.NAME]?.title[0]?.text?.content || 'Unknown';
+                const price = properties[WISHLIST_PROPERTIES.PRICE]?.number || 0;
+                const url = properties[WISHLIST_PROPERTIES.URL]?.url || null;
+                const note = properties[WISHLIST_PROPERTIES.NOTE]?.rich_text[0]?.text?.content || null;
+                const priority = properties[WISHLIST_PROPERTIES.PRIORITY]?.select?.name || null;
+                const category = properties[WISHLIST_PROPERTIES.CATEGORY]?.select?.name || null;
+
+                let optionalFields = '';
+                if (url) optionalFields += `🔗 URL: ${url}\n`;
+                if (note) optionalFields += `📝 Note: ${note}\n`;
+                if (priority) optionalFields += `⭐ Priority: ${priority}\n`;
+                if (category) optionalFields += `📁 Category: ${category}`;
+
+                message += MESSAGES.WISHLIST_ITEM
+                    .replace('{name}', name)
+                    .replace('{price}', addThousandSeparator(price))
+                    .replace('{optionalFields}', optionalFields.trim()) + '\n\n';
+            });
+
+            return message;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_WISHLIST);
+        }
+    }
+
+    async addWishlistItem(wishlistData) {
+        try {
+            const properties = {
+                [WISHLIST_PROPERTIES.NAME]: {
+                    title: [
+                        {
+                            text: {
+                                content: wishlistData.name
+                            }
+                        }
+                    ]
+                },
+                [WISHLIST_PROPERTIES.PRICE]: {
+                    number: Number(wishlistData.price)
+                }
+            };
+
+            // Add optional fields
+            if (wishlistData.url && wishlistData.url.toLowerCase() !== 'skip') {
+                properties[WISHLIST_PROPERTIES.URL] = {
+                    url: wishlistData.url
+                };
+            }
+
+            if (wishlistData.note && wishlistData.note.toLowerCase() !== 'skip') {
+                properties[WISHLIST_PROPERTIES.NOTE] = {
+                    rich_text: [
+                        {
+                            text: {
+                                content: wishlistData.note
+                            }
+                        }
+                    ]
+                };
+            }
+
+            if (wishlistData.priority && wishlistData.priority.toLowerCase() !== 'skip') {
+                properties[WISHLIST_PROPERTIES.PRIORITY] = {
+                    select: {
+                        name: wishlistData.priority
+                    }
+                };
+            }
+
+            if (wishlistData.category && wishlistData.category.toLowerCase() !== 'skip') {
+                properties[WISHLIST_PROPERTIES.CATEGORY] = {
+                    select: {
+                        name: wishlistData.category
+                    }
+                };
+            }
+
+            console.log('Creating Wishlist item with properties:', properties);
+
+            const response = await this.notion.pages.create({
+                parent: { database_id: this.wishlist_database_id },
+                properties: properties
+            });
+
+            return MESSAGES.WISHLIST_ADDED
+                .replace('{name}', wishlistData.name)
+                .replace('{price}', wishlistData.price);
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_ADD_WISHLIST);
         }
     }
 }
