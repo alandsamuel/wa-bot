@@ -73,6 +73,7 @@ const MESSAGES = {
     EXPENSES_FOR_TODAY: '📊 Expenses for today ({date})',
     EXPENSE_ITEM: '- {name}: Rp. {amount} on {date}',
     TOTAL_EXPENSES: '\n💰 Total: Rp. {total}',
+    EXPENSE_REMINDER: '📝 Reminder: Please input your expenses for today!',
 
     // Receipt handling
     RECEIPT_PROCESSING: '⏳ Processing receipt...',

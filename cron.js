@@ -5,9 +5,11 @@ const moment = require('moment-timezone');
 
 // Cron schedule configuration - runs every day at 00:00 (midnight) Asia/Jakarta timezone
 const CRON_SCHEDULE = '0 0 * * *';
+const REMINDER_CRON_SCHEDULE = '0 23 * * *';
 const TIMEZONE = 'Asia/Jakarta';
 
 let scheduledTask = null;
+let reminderTask = null;
 
 async function getYesterdayExpenses() {
     const today = moment().tz(TIMEZONE);
@@ -47,6 +49,16 @@ async function getYesterdayExpenses() {
     }
 }
 
+async function sendExpenseReminder(client) {
+    const message = MESSAGES.EXPENSE_REMINDER;
+    const whitelistNumbers = process.env.WHITELISTED_NUMBERS.split(',');
+    for (const number of whitelistNumbers) {
+        const chatId = number.trim() + '@c.us';
+        await client.sendMessage(chatId, message);
+        console.log(`✅ Expense reminder sent to ${number}`);
+    }
+}
+
 function initializeCron(client) {
     if (scheduledTask) {
         console.log('Cron job already initialized');
@@ -58,7 +70,6 @@ function initializeCron(client) {
         try {
             const yesterdayExpenses = await getYesterdayExpenses();
 
-            // Send to whitelisted numbers
             const whitelistNumbers = process.env.WHITELISTED_NUMBERS.split(',');
             for (const number of whitelistNumbers) {
                 const chatId = number.trim() + '@c.us';
@@ -70,7 +81,17 @@ function initializeCron(client) {
         }
     });
 
-    console.log(`✅ Cron job initialized: Runs every day at 00:00 ${TIMEZONE} timezone (${CRON_SCHEDULE})`);
+    reminderTask = cron.schedule(REMINDER_CRON_SCHEDULE, async () => {
+        console.log('⏰ Running expense reminder cron job...');
+        try {
+            await sendExpenseReminder(client);
+        } catch (error) {
+            console.error('❌ Error in expense reminder cron:', error);
+        }
+    });
+
+    console.log(`✅ Daily summary cron: Runs every day at 00:00 ${TIMEZONE} timezone (${CRON_SCHEDULE})`);
+    console.log(`✅ Expense reminder cron: Runs every day at 23:00 ${TIMEZONE} timezone (${REMINDER_CRON_SCHEDULE})`);
 }
 
 function stopCron() {
@@ -78,13 +99,19 @@ function stopCron() {
         scheduledTask.stop();
         scheduledTask.destroy();
         scheduledTask = null;
-        console.log('Cron job stopped');
     }
+    if (reminderTask) {
+        reminderTask.stop();
+        reminderTask.destroy();
+        reminderTask = null;
+    }
+    console.log('Cron jobs stopped');
 }
 
 module.exports = {
     initializeCron,
     stopCron,
     CRON_SCHEDULE,
+    REMINDER_CRON_SCHEDULE,
     getYesterdayExpenses
 };
