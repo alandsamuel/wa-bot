@@ -5,7 +5,8 @@ const COMMANDS = {
     CANCEL: 'cancel',
     NOTION_LINK: '!notionlink',
     PO: '!po',
-    WISHLIST: '!wishlist'
+    WISHLIST: '!wishlist',
+    TEST_CRON: '!testcron'
 };
 
 // Reactions

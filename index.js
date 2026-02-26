@@ -18,7 +18,7 @@ const {
     handleWishlistInput,
     handleListWishlistCommand
 } = require('./handler');
-const { initializeCron, stopCron } = require('./cron');
+const { initializeCron, stopCron, sendDailySummary, sendExpenseReminder } = require('./cron');
 const { handleReceiptMessage } = require('./receipt');
 const notionService = require('./NotionService');
 
@@ -214,6 +214,11 @@ client.on('message', async (message) => {
                 break;
             case "!summarize":
                 await handleSummarizeCommand(message);
+                break;
+            case COMMANDS.TEST_CRON:
+                await message.reply('🧪 Testing daily summary...');
+                await sendDailySummary(client);
+                await message.reply('✅ Daily summary test complete!');
                 break;
             default:
                 // Try to process as receipt if image is sent

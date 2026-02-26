@@ -59,6 +59,28 @@ async function sendExpenseReminder(client) {
     }
 }
 
+async function sendDailySummary(client) {
+    console.log('⏰ Running daily summary cron job...');
+    try {
+        if (!process.env.WHITELISTED_NUMBERS) {
+            console.error('❌ WHITELISTED_NUMBERS not set');
+            return;
+        }
+
+        const yesterdayExpenses = await getYesterdayExpenses();
+        console.log('📊 Daily summary message:', yesterdayExpenses);
+
+        const whitelistNumbers = process.env.WHITELISTED_NUMBERS.split(',');
+        for (const number of whitelistNumbers) {
+            const chatId = number.trim() + '@c.us';
+            await client.sendMessage(chatId, yesterdayExpenses);
+            console.log(`✅ Daily summary sent to ${number}`);
+        }
+    } catch (error) {
+        console.error('❌ Error in daily summary cron:', error);
+    }
+}
+
 function initializeCron(client) {
     if (scheduledTask) {
         console.log('Cron job already initialized');
@@ -66,19 +88,7 @@ function initializeCron(client) {
     }
 
     scheduledTask = cron.schedule(CRON_SCHEDULE, async () => {
-        console.log('⏰ Running daily summary cron job...');
-        try {
-            const yesterdayExpenses = await getYesterdayExpenses();
-
-            const whitelistNumbers = process.env.WHITELISTED_NUMBERS.split(',');
-            for (const number of whitelistNumbers) {
-                const chatId = number.trim() + '@c.us';
-                await client.sendMessage(chatId, yesterdayExpenses);
-                console.log(`✅ Daily summary sent to ${number}`);
-            }
-        } catch (error) {
-            console.error('❌ Error in daily summary cron:', error);
-        }
+        await sendDailySummary(client);
     });
 
     reminderTask = cron.schedule(REMINDER_CRON_SCHEDULE, async () => {
@@ -111,6 +121,8 @@ function stopCron() {
 module.exports = {
     initializeCron,
     stopCron,
+    sendDailySummary,
+    sendExpenseReminder,
     CRON_SCHEDULE,
     REMINDER_CRON_SCHEDULE,
     getYesterdayExpenses

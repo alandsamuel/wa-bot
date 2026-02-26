@@ -9,6 +9,7 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 - 📅 **Today's Expenses**: Check today's expenses with `!today` command
 - � **Monthly Summary**: Breakdown expenses by category with `!summarize` command
 - 📊 **Daily Summary**: Automatic daily summary of yesterday's expenses sent at midnight
+- ⏰ **Expense Reminder**: Daily reminder at 11 PM to input your expenses
 - 🧾 **Receipt Processing**: Send receipt images for automatic data extraction and Notion storage
 - 🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
 - 📦 **Pre-Order Tracking**: Track purchase orders with `!po` and `!po list` commands
@@ -257,7 +258,55 @@ wa-bot/
 - Environment-based configuration
 - Puppeteer sandbox mode disabled for Docker compatibility
 - Local authentication with WhatsApp session persistence
-- Customizable cron schedule for daily summary (default: 00:00)
+- Customizable cron schedule for daily summary (default: 00:00) and expense reminder (default: 23:00)
+
+## Cron Jobs Setup
+
+This bot includes two automated cron jobs:
+
+### Daily Summary
+- **Default Time**: 00:00 (midnight) Asia/Jakarta timezone
+- **Purpose**: Sends yesterday's expenses summary to whitelisted numbers
+- **Cron Expression**: `0 0 * * *`
+
+### Expense Reminder
+- **Default Time**: 23:00 (11 PM) Asia/Jakarta timezone
+- **Purpose**: Reminds you to input your daily expenses
+- **Cron Expression**: `0 23 * * *`
+
+### Customize Cron Schedules
+
+Edit the constants in `cron.js`:
+
+```javascript
+// Daily summary - runs at midnight
+const CRON_SCHEDULE = '0 0 * * *';
+
+// Expense reminder - runs at 11 PM
+const REMINDER_CRON_SCHEDULE = '0 23 * * *';
+```
+
+Use [cron expression syntax](https://crontab.guru/) for custom schedules.
+
+### Testing Cron Jobs
+
+You can manually test the cron jobs by sending commands to the bot:
+
+| Command       | Description                           |
+| ------------- | ------------------------------------- |
+| `!testcron`   | Trigger daily summary manually        |
+
+The bot will send you yesterday's expenses summary immediately.
+
+### Verify Cron is Running
+
+1. Start the bot: `pnpm start`
+2. Look for these log messages:
+   ```
+   ✅ Daily summary cron: Runs every day at 00:00 Asia/Jakarta timezone (0 0 * * *)
+   ✅ Expense reminder cron: Runs every day at 23:00 Asia/Jakarta timezone (0 23 * * *)
+   ```
+3. If you see "Cron job already initialized", the crons are already running from a previous session
 
 ## Development
 
@@ -267,17 +316,6 @@ wa-bot/
 2. Create handler function in `handler.js`
 3. Add case to switch statement in `index.js`
 4. Add help message in `MESSAGES.HELP_MESSAGE`
-
-### Customize Cron Schedule
-
-Edit the `CRON_SCHEDULE` constant in `cron.js`:
-
-```javascript
-// Run at 06:00 AM daily
-const CRON_SCHEDULE = "0 6 * * *";
-```
-
-Use [cron expression syntax](https://crontab.guru/) for other schedules.
 
 ### Add New Message
 
