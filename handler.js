@@ -266,6 +266,12 @@ async function handleListWishlistCommand(message) {
     await message.reply(response);
 }
 
+async function handleSearchCommand(message, searchTerm) {
+    console.log('Handling search command for:', searchTerm);
+    const response = await notionService.searchExpenses(searchTerm);
+    await message.reply(response);
+}
+
 module.exports = {
     pendingExpenses,
     pendingWishlistItems,
@@ -279,5 +285,6 @@ module.exports = {
     handleListPOsCommand,
     handleWishlistCommand,
     handleWishlistInput,
-    handleListWishlistCommand
+    handleListWishlistCommand,
+    handleSearchCommand
 }

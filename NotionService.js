@@ -429,6 +429,55 @@ class NotionService {
         }
     }
 
+    async searchExpenses(term) {
+        try {
+            const response = await this.notion.dataSources.query({
+                data_source_id: this.data_source_id,
+                filter: {
+                    property: NOTION_PROPERTIES.NAME,
+                    title: {
+                        contains: term
+                    }
+                },
+                sorts: [
+                    {
+                        property: NOTION_PROPERTIES.DATE,
+                        direction: 'descending'
+                    }
+                ]
+            });
+
+            if (response.results.length === 0) {
+                return MESSAGES.NO_SEARCH_RESULTS.replace('{term}', term);
+            }
+
+            const addThousandSeparator = (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+
+            let message = MESSAGES.SEARCH_RESULTS.replace('{term}', term) + '\n\n';
+
+            let totalExpenses = 0;
+            response.results.forEach((page) => {
+                const properties = page.properties;
+                const name = properties[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description';
+                const amount = properties[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+                const category = properties[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized';
+                const date = properties[NOTION_PROPERTIES.DATE]?.date?.start || 'No date';
+
+                message += `${name}\n💰 Rp. ${addThousandSeparator(amount)} | 📁 ${category} | 📅 ${date}\n\n`;
+                totalExpenses += amount;
+            });
+
+            message += MESSAGES.TOTAL_EXPENSES.replace('{total}', addThousandSeparator(totalExpenses));
+
+            return message;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
     async addWishlistItem(wishlistData) {
         try {
             const properties = {

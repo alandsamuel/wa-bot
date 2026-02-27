@@ -16,7 +16,8 @@ const {
     handleListPOsCommand,
     handleWishlistCommand,
     handleWishlistInput,
-    handleListWishlistCommand
+    handleListWishlistCommand,
+    handleSearchCommand
 } = require('./handler');
 const { initializeCron, stopCron, sendDailySummary, sendExpenseReminder } = require('./cron');
 const { handleReceiptMessage } = require('./receipt');
@@ -221,6 +222,13 @@ client.on('message', async (message) => {
                 await message.reply('✅ Daily summary test complete!');
                 break;
             default:
+                if (lowerText.startsWith(COMMANDS.SEARCH + ' ')) {
+                    const searchTerm = text.substring(COMMANDS.SEARCH.length).trim();
+                    if (searchTerm) {
+                        await handleSearchCommand(message, searchTerm);
+                        break;
+                    }
+                }
                 // Try to process as receipt if image is sent
                 const receiptResult = await handleReceiptMessage(message);
                 if (receiptResult) {

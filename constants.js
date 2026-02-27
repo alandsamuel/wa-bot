@@ -6,7 +6,8 @@ const COMMANDS = {
     NOTION_LINK: '!notionlink',
     PO: '!po',
     WISHLIST: '!wishlist',
-    TEST_CRON: '!testcron'
+    TEST_CRON: '!testcron',
+    SEARCH: '!search'
 };
 
 // Reactions
@@ -78,7 +79,7 @@ const MESSAGES = {
     INVALID_CATEGORY_RESPONSE: '❌ Invalid category!\n\nAvailable categories:\n{categories}\n\nPlease enter a valid category:\n\nor type \'cancel\' to abort.',
     EXPENSE_ADDED: '✅ Expense added: {amount} - {description}\n📁 Category: {category}',
     EXPENSE_DETECTED_PROMPT: '📝 Expense detected: {description}\n💰 Amount: {amount}\n\nAvailable categories:\n{categories}\n\nPlease enter the category: \n or type \'cancel\' to abort.',
-    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary by category\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !wishlist - Add wishlist item\n• !wishlist list - List all wishlist items\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
+    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary by category\n• !search <term> - Search expenses by description\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !wishlist - Add wishlist item\n• !wishlist list - List all wishlist items\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
 
     // Wishlist
     WISHLIST_WELCOME: '🛍️ Welcome to Wishlist!\n\nPlease provide the following details:\n\n1️⃣ Item Name: ',
@@ -106,6 +107,8 @@ const MESSAGES = {
     EXPENSE_ITEM: '- {name}: Rp. {amount} on {date}',
     TOTAL_EXPENSES: '\n💰 Total: Rp. {total}',
     EXPENSE_REMINDER: '📝 Reminder: Please input your expenses for today!',
+    SEARCH_RESULTS: '🔍 Search results for "{term}":',
+    NO_SEARCH_RESULTS: 'No expenses found matching "{term}".',
 
     // Receipt handling
     RECEIPT_PROCESSING: '⏳ Processing receipt...',
