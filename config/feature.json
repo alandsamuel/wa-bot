@@ -1,0 +1,44 @@
+{
+  "commands": {
+    "list": {
+      "enabled": true,
+      "description": "List monthly expenses"
+    },
+    "today": {
+      "enabled": true,
+      "description": "Today's expenses"
+    },
+    "summarize": {
+      "enabled": true,
+      "description": "Monthly summary by category"
+    },
+    "search": {
+      "enabled": true,
+      "description": "Search expenses by description"
+    },
+    "po": {
+      "enabled": true,
+      "description": "Add pre-order (PO)"
+    },
+    "poList": {
+      "enabled": true,
+      "description": "List all pre-orders"
+    },
+    "wishlist": {
+      "enabled": true,
+      "description": "Add wishlist item"
+    },
+    "wishlistList": {
+      "enabled": true,
+      "description": "List all wishlist items"
+    },
+    "notionlink": {
+      "enabled": true,
+      "description": "Get Notion database link"
+    },
+    "receipt": {
+      "enabled": true,
+      "description": "Process receipt with Veryfi"
+    }
+  }
+}

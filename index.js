@@ -3,6 +3,8 @@ const qrcode = require('qrcode-terminal');
 const config = require('./config');
 const { COMMANDS, REACTIONS, MESSAGES } = require('./constants');
 const { parsePriceWithK } = require('./helper');
+const { isEnabled, getHelpMessage } = require('./config/featureConfig');
+const { MESSAGES: HELP_MESSAGES } = require('./constants');
 const {
     pendingExpenses,
     pendingWishlistItems,
@@ -193,27 +195,35 @@ client.on('message', async (message) => {
         // Route commands using switch case
         switch (lowerText) {
             case COMMANDS.LIST:
+                if (!isEnabled('list')) return;
                 await handleListCommand(message);
                 break;
             case COMMANDS.TODAY:
+                if (!isEnabled('today')) return;
                 await handleTodayCommand(message);
                 break;
             case COMMANDS.NOTION_LINK:
+                if (!isEnabled('notionlink')) return;
                 await handleNotionLinkCommand(message);
                 break;
             case '!po list':
+                if (!isEnabled('poList')) return;
                 await handleListPOsCommand(message);
                 break;
             case COMMANDS.PO:
+                if (!isEnabled('po')) return;
                 await handlePOCommand(message, userId);
                 break;
             case '!wishlist list':
+                if (!isEnabled('wishlistList')) return;
                 await handleListWishlistCommand(message);
                 break;
             case COMMANDS.WISHLIST:
+                if (!isEnabled('wishlist')) return;
                 await handleWishlistCommand(message, userId);
                 break;
             case "!summarize":
+                if (!isEnabled('summarize')) return;
                 await handleSummarizeCommand(message);
                 break;
             case COMMANDS.TEST_CRON:
@@ -223,6 +233,7 @@ client.on('message', async (message) => {
                 break;
             default:
                 if (lowerText.startsWith(COMMANDS.SEARCH + ' ')) {
+                    if (!isEnabled('search')) return;
                     const searchTerm = text.substring(COMMANDS.SEARCH.length).trim();
                     if (searchTerm) {
                         await handleSearchCommand(message, searchTerm);
@@ -232,6 +243,7 @@ client.on('message', async (message) => {
                 // Try to process as receipt if image is sent
                 const receiptResult = await handleReceiptMessage(message);
                 if (receiptResult) {
+                    if (!isEnabled('receipt')) return;
                     // Show receipt details and ask to confirm description
                     await message.reply(receiptResult.formattedMessage);
 

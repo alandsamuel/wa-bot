@@ -1,6 +1,7 @@
 const notionService = require('./NotionService');
 const { COMMANDS, MESSAGES } = require('./constants');
 const { parsePriceWithK } = require('./helper');
+const { getHelpMessage } = require('./config/featureConfig');
 
 const moment = require('moment-timezone');
 
@@ -105,7 +106,7 @@ async function handleExpenseInput(message, userId, text) {
         await message.reply(MESSAGES.EXPENSE_DETECTED_PROMPT.replace('{description}', expense.description).replace('{amount}', expense.amount).replace('{categories}', categories.join('\n')));
     } else {
         console.log(MESSAGES.NO_EXPENSE_DETECTED);
-        await message.reply(MESSAGES.HELP_MESSAGE);
+        await message.reply(getHelpMessage());
     }
 }
 
