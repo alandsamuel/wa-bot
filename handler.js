@@ -273,6 +273,35 @@ async function handleSearchCommand(message, searchTerm) {
     await message.reply(response);
 }
 
+async function handleRecentCommand(message) {
+    console.log('Handling recent command');
+    const response = await notionService.getRecentExpenses(10);
+    await message.reply(response);
+}
+
+async function handleTopCommand(message) {
+    console.log('Handling top categories command');
+    const response = await notionService.getTopCategories();
+    await message.reply(response);
+}
+
+async function handleBudgetCommand(message, text) {
+    console.log('Handling budget command:', text);
+    
+    if (text && text.trim()) {
+        const amount = parsePriceWithK(text.trim());
+        if (isNaN(amount)) {
+            await message.reply(MESSAGES.BUDGET_INVALID);
+            return;
+        }
+        const response = await notionService.setBudget(amount);
+        await message.reply(response);
+    } else {
+        const response = await notionService.getBudgetStatus();
+        await message.reply(response);
+    }
+}
+
 module.exports = {
     pendingExpenses,
     pendingWishlistItems,
@@ -287,5 +316,8 @@ module.exports = {
     handleWishlistCommand,
     handleWishlistInput,
     handleListWishlistCommand,
-    handleSearchCommand
+    handleSearchCommand,
+    handleRecentCommand,
+    handleTopCommand,
+    handleBudgetCommand
 }

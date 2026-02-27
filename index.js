@@ -19,7 +19,10 @@ const {
     handleWishlistCommand,
     handleWishlistInput,
     handleListWishlistCommand,
-    handleSearchCommand
+    handleSearchCommand,
+    handleRecentCommand,
+    handleTopCommand,
+    handleBudgetCommand
 } = require('./handler');
 const { initializeCron, stopCron, sendDailySummary, sendExpenseReminder } = require('./cron');
 const { handleReceiptMessage } = require('./receipt');
@@ -225,6 +228,26 @@ client.on('message', async (message) => {
             case "!summarize":
                 if (!isEnabled('summarize')) return;
                 await handleSummarizeCommand(message);
+                break;
+            case COMMANDS.RECENT:
+                if (!isEnabled('recent')) return;
+                await handleRecentCommand(message);
+                break;
+            case COMMANDS.TOP:
+                if (!isEnabled('top')) return;
+                await handleTopCommand(message);
+                break;
+            case COMMANDS.BUDGET:
+                if (!isEnabled('budget')) return;
+                if (lowerText.startsWith(COMMANDS.BUDGET + ' ')) {
+                    const budgetAmount = text.substring(COMMANDS.BUDGET.length).trim();
+                    await handleBudgetCommand(message, budgetAmount);
+                } else {
+                    await handleBudgetCommand(message, '');
+                }
+                break;
+            case COMMANDS.HELP:
+                await message.reply(getHelpMessage());
                 break;
             case COMMANDS.TEST_CRON:
                 await message.reply('🧪 Testing daily summary...');

@@ -7,7 +7,11 @@ const COMMANDS = {
     PO: '!po',
     WISHLIST: '!wishlist',
     TEST_CRON: '!testcron',
-    SEARCH: '!search'
+    SEARCH: '!search',
+    RECENT: '!recent',
+    TOP: '!top',
+    BUDGET: '!budget',
+    HELP: '!help'
 };
 
 // Reactions
@@ -79,7 +83,7 @@ const MESSAGES = {
     INVALID_CATEGORY_RESPONSE: '❌ Invalid category!\n\nAvailable categories:\n{categories}\n\nPlease enter a valid category:\n\nor type \'cancel\' to abort.',
     EXPENSE_ADDED: '✅ Expense added: {amount} - {description}\n📁 Category: {category}',
     EXPENSE_DETECTED_PROMPT: '📝 Expense detected: {description}\n💰 Amount: {amount}\n\nAvailable categories:\n{categories}\n\nPlease enter the category: \n or type \'cancel\' to abort.',
-    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !summarize - Monthly summary by category\n• !search <term> - Search expenses by description\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !wishlist - Add wishlist item\n• !wishlist list - List all wishlist items\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
+    HELP_MESSAGE: '💡 Commands:\n• Type expense with amount: "makan nasi padang 20000"\n• !list - List monthly expenses\n• !today - Today\'s expenses\n• !recent - Show last 10 expenses\n• !top - Top spending categories\n• !summarize - Monthly summary by category\n• !search <term> - Search expenses by description\n• !budget - Show budget status\n• !budget <amount> - Set monthly budget\n• !po - Add pre-order (PO)\n• !po list - List all pre-orders\n• !wishlist - Add wishlist item\n• !wishlist list - List all wishlist items\n• !notionlink - Get Notion database link\n• Send receipt image - Process receipt with Veryfi\n• cancel - Cancel pending input',
 
     // Wishlist
     WISHLIST_WELCOME: '🛍️ Welcome to Wishlist!\n\nPlease provide the following details:\n\n1️⃣ Item Name: ',
@@ -136,7 +140,25 @@ const MESSAGES = {
     POS_HEADER: 'Here are your ongoing pre-orders:',
     PO_ITEM: '📦 {name}\n🏪 {toko}\n💰 Full: Rp. {fullPrice} | DP: Rp. {dp} | Pelunas: Rp. {pelunas}\n📅 Release: {releaseDate}\n✈️ Arrived: {arrived}\n',
     FAILED_RETRIEVE_POS: 'Failed to retrieve pre-orders from Notion',
-    FAILED_ADD_PO: 'Failed to add pre-order to Notion'
+    FAILED_ADD_PO: 'Failed to add pre-order to Notion',
+
+    // Recent expenses
+    RECENT_HEADER: '📋 Your {count} most recent expenses:',
+    NO_RECENT_EXPENSES: 'No recent expenses found.',
+
+    // Top categories
+    TOP_CATEGORIES_HEADER: '🏆 Top spending categories this month:',
+    NO_CATEGORIES_FOUND: 'No expense data found for this month.',
+
+    // Budget
+    BUDGET_WELCOME: '💰 Welcome to Budget Manager!\n\nPlease enter your monthly budget (e.g., 5000000 or 5m):',
+    BUDGET_SET: '✅ Monthly budget set to: Rp. {budget}\n\nYou will receive alerts when you reach 80% and 100% of your budget.',
+    BUDGET_SHOW: '💰 Current Budget: Rp. {budget}\n💸 Spent: Rp. {spent}\n📊 Progress: {percent}%\n{alert}',
+    BUDGET_ALERT_80: '⚠️ Warning: You\'ve used {percent}% of your monthly budget!',
+    BUDGET_ALERT_100: '🚨 Alert: You\'ve exceeded your monthly budget!',
+    BUDGET_NO_BUDGET: 'No budget set. Use !budget <amount> to set a monthly budget.',
+    BUDGET_INVALID: '❌ Please enter a valid number for budget (e.g., 5000000 or 5m)',
+    BUDGET_CANCELLED: '❌ Budget setup cancelled.'
 };
 
 // Date Format Options

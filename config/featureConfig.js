@@ -3,33 +3,68 @@ const path = require('path');
 
 const featureConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'feature.json'), 'utf8'));
 
-function isEnabled(feature) {
-    return featureConfig.commands[feature]?.enabled === true;
+const commandKeyMap = {
+    'list': '!list',
+    'today': '!today',
+    'recent': '!recent',
+    'top': '!top',
+    'budget': '!budget',
+    'budgetSet': '!budget <amount>',
+    'summarize': '!summarize',
+    'search': '!search <term>',
+    'po': '!po',
+    'poList': '!po list',
+    'wishlist': '!wishlist',
+    'wishlistList': '!wishlist list',
+    'notionlink': '!notionlink',
+    'receipt': 'Send receipt image'
+};
+
+function isEnabled(featureKey) {
+    const commandKey = commandKeyMap[featureKey] || featureKey;
+    for (const category of Object.values(featureConfig.categories)) {
+        if (category.commands[commandKey]?.enabled !== undefined) {
+            return category.commands[commandKey].enabled === true;
+        }
+    }
+    return false;
 }
 
 function getHelpMessage() {
-    const commands = featureConfig.commands;
-    let helpText = '💡 Commands:\n';
-    helpText += '• Type expense with amount: "makan nasi padang 20000"\n';
-    
-    if (commands.list.enabled) helpText += `• !list - ${commands.list.description}\n`;
-    if (commands.today.enabled) helpText += `• !today - ${commands.today.description}\n`;
-    if (commands.summarize.enabled) helpText += `• !summarize - ${commands.summarize.description}\n`;
-    if (commands.search.enabled) helpText += `• !search <term> - ${commands.search.description}\n`;
-    if (commands.po.enabled) helpText += `• !po - ${commands.po.description}\n`;
-    if (commands.poList.enabled) helpText += `• !po list - ${commands.poList.description}\n`;
-    if (commands.wishlist.enabled) helpText += `• !wishlist - ${commands.wishlist.description}\n`;
-    if (commands.wishlistList.enabled) helpText += `• !wishlist list - ${commands.wishlistList.description}\n`;
-    if (commands.notionlink.enabled) helpText += `• !notionlink - ${commands.notionlink.description}\n`;
-    if (commands.receipt.enabled) helpText += `• Send receipt image - ${commands.receipt.description}\n`;
-    
-    helpText += '• cancel - Cancel pending input';
-    
-    return helpText;
+    let helpText = featureConfig.help.header;
+    helpText += featureConfig.help.expenseExample;
+
+    for (const category of Object.values(featureConfig.categories)) {
+        const enabledCommands = Object.entries(category.commands)
+            .filter(([_, cmd]) => cmd.enabled);
+
+        if (enabledCommands.length > 0) {
+            helpText += `\n\n${category.name}\n`;
+            enabledCommands.forEach(([cmd, details]) => {
+                helpText += `• ${cmd} - ${details.description}\n`;
+            });
+        }
+    }
+
+    helpText += featureConfig.help.footer;
+    return helpText.trim();
+}
+
+function getCommandMap() {
+    const commandMap = {};
+    for (const category of Object.values(featureConfig.categories)) {
+        for (const [cmd, details] of Object.entries(category.commands)) {
+            if (cmd.startsWith('!') || cmd.startsWith('Send')) {
+                commandMap[cmd] = details;
+            }
+        }
+    }
+    return commandMap;
 }
 
 module.exports = {
     featureConfig,
     isEnabled,
-    getHelpMessage
+    getHelpMessage,
+    getCommandMap
 };

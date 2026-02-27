@@ -1,6 +1,10 @@
 const { Client } = require('@notionhq/client');
 const { NOTION_PROPERTIES, PO_PROPERTIES, WISHLIST_PROPERTIES, DATE_LOCALE, MESSAGES, DATE_FORMAT_OPTIONS } = require('./constants');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
+
+const BUDGET_FILE = path.join(__dirname, 'budget.json');
 
 class NotionService {
     constructor() {
@@ -544,6 +548,220 @@ class NotionService {
             console.error(MESSAGES.ERROR_HANDLER, error);
             throw new Error(MESSAGES.FAILED_ADD_WISHLIST);
         }
+    }
+
+    async getRecentExpenses(limit = 10) {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        try {
+            const response = await this.notion.databases.query({
+                database_id: this.data_source_id,
+                filter: {
+                    and: [
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_after: startDate
+                            }
+                        },
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_before: endDate
+                            }
+                        }
+                    ]
+                },
+                sorts: [
+                    {
+                        property: NOTION_PROPERTIES.DATE,
+                        direction: 'descending'
+                    }
+                ],
+                page_size: limit
+            });
+
+            if (response.results.length === 0) {
+                return MESSAGES.NO_RECENT_EXPENSES;
+            }
+
+            const addThousandSeparator = (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+
+            let message = MESSAGES.RECENT_HEADER.replace('{count}', response.results.length) + '\n\n';
+
+            response.results.forEach((page) => {
+                const props = page.properties;
+                const name = props[NOTION_PROPERTIES.NAME]?.title[0]?.text?.content || 'No description';
+                const amount = props[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+                const category = props[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized';
+                const date = props[NOTION_PROPERTIES.DATE]?.date?.start || 'No date';
+
+                message += `• ${name}\n  💰 Rp. ${addThousandSeparator(amount)} | 📁 ${category} | 📅 ${date}\n\n`;
+            });
+
+            return message;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
+    async getTopCategories() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        try {
+            const response = await this.notion.databases.query({
+                database_id: this.data_source_id,
+                filter: {
+                    and: [
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_after: startDate
+                            }
+                        },
+                        {
+                            property: NOTION_PROPERTIES.DATE,
+                            date: {
+                                on_or_before: endDate
+                            }
+                        }
+                    ]
+                }
+            });
+
+            if (response.results.length === 0) {
+                return MESSAGES.NO_CATEGORIES_FOUND;
+            }
+
+            const byCategory = {};
+            let total = 0;
+
+            response.results.forEach((page) => {
+                const props = page.properties;
+                const category = props[NOTION_PROPERTIES.CATEGORY]?.select?.name || 'Uncategorized';
+                const amount = props[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+                total += amount;
+                byCategory[category] = (byCategory[category] || 0) + amount;
+            });
+
+            const sortedCategories = Object.entries(byCategory)
+                .sort((a, b) => b[1] - a[1]);
+
+            const addThousandSeparator = (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+
+            let message = MESSAGES.TOP_CATEGORIES_HEADER + '\n\n';
+            let rank = 1;
+
+            sortedCategories.forEach(([category, amount]) => {
+                const percent = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
+                const bar = '█'.repeat(Math.ceil(percent / 5));
+                message += `${rank}. ${category}\n   Rp. ${addThousandSeparator(amount)} (${percent}%)\n   ${bar}\n\n`;
+                rank++;
+            });
+
+            message += `💰 Total: Rp. ${addThousandSeparator(total)}`;
+
+            return message;
+        } catch (error) {
+            console.error(MESSAGES.ERROR_HANDLER, error);
+            throw new Error(MESSAGES.FAILED_RETRIEVE_EXPENSES);
+        }
+    }
+
+    loadBudget() {
+        try {
+            if (fs.existsSync(BUDGET_FILE)) {
+                const data = fs.readFileSync(BUDGET_FILE, 'utf8');
+                return JSON.parse(data);
+            }
+        } catch (error) {
+            console.error('Error loading budget:', error);
+        }
+        return {};
+    }
+
+    saveBudget(budgetData) {
+        try {
+            fs.writeFileSync(BUDGET_FILE, JSON.stringify(budgetData, null, 2));
+        } catch (error) {
+            console.error('Error saving budget:', error);
+            throw new Error('Failed to save budget');
+        }
+    }
+
+    async setBudget(amount) {
+        const budgetData = this.loadBudget();
+        budgetData.monthly = amount;
+        budgetData.updatedAt = new Date().toISOString();
+        this.saveBudget(budgetData);
+        return MESSAGES.BUDGET_SET.replace('{budget}', amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+    }
+
+    async getBudgetStatus() {
+        const budgetData = this.loadBudget();
+        
+        if (!budgetData.monthly) {
+            return MESSAGES.BUDGET_NO_BUDGET;
+        }
+
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString();
+
+        const response = await this.notion.databases.query({
+            database_id: this.data_source_id,
+            filter: {
+                and: [
+                    {
+                        property: NOTION_PROPERTIES.DATE,
+                        date: {
+                            on_or_after: startDate
+                        }
+                    },
+                    {
+                        property: NOTION_PROPERTIES.DATE,
+                        date: {
+                            on_or_before: endDate
+                        }
+                    }
+                ]
+            }
+        });
+
+        let spent = 0;
+        response.results.forEach((page) => {
+            const amount = page.properties[NOTION_PROPERTIES.AMOUNT]?.number || 0;
+            spent += amount;
+        });
+
+        const budget = budgetData.monthly;
+        const percent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+
+        const addThousandSeparator = (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        };
+
+        let alert = '';
+        if (percent >= 100) {
+            alert = '\n' + MESSAGES.BUDGET_ALERT_100.replace('{percent}', percent);
+        } else if (percent >= 80) {
+            alert = '\n' + MESSAGES.BUDGET_ALERT_80.replace('{percent}', percent);
+        }
+
+        return MESSAGES.BUDGET_SHOW
+            .replace('{budget}', addThousandSeparator(budget))
+            .replace('{spent}', addThousandSeparator(spent))
+            .replace('{percent}', percent)
+            .replace('{alert}', alert);
     }
 }
 

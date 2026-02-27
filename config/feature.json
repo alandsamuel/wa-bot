@@ -1,44 +1,48 @@
 {
-  "commands": {
-    "list": {
-      "enabled": true,
-      "description": "List monthly expenses"
+  "help": {
+    "header": "💡 Available Commands:",
+    "footer": "\n• cancel - Cancel pending input",
+    "expenseExample": "\n💰 Add Expense: \"makan nasi padang 20000\""
+  },
+  "categories": {
+    "expenses": {
+      "name": "📊 Expenses",
+      "commands": {
+        "!list": { "description": "List monthly expenses", "enabled": true },
+        "!today": { "description": "Show today's expenses", "enabled": true },
+        "!recent": { "description": "Show last 10 expenses", "enabled": true },
+        "!top": { "description": "Top spending categories", "enabled": true },
+        "!summarize": { "description": "Monthly summary by category", "enabled": true },
+        "!search <term>": { "description": "Search expenses by description", "enabled": true }
+      }
     },
-    "today": {
-      "enabled": true,
-      "description": "Today's expenses"
+    "budget": {
+      "name": "💰 Budget",
+      "commands": {
+        "!budget": { "description": "Show budget status", "enabled": true },
+        "!budget <amount>": { "description": "Set monthly budget (e.g. 5m)", "enabled": true }
+      }
     },
-    "summarize": {
-      "enabled": true,
-      "description": "Monthly summary by category"
-    },
-    "search": {
-      "enabled": true,
-      "description": "Search expenses by description"
-    },
-    "po": {
-      "enabled": true,
-      "description": "Add pre-order (PO)"
-    },
-    "poList": {
-      "enabled": true,
-      "description": "List all pre-orders"
+    "preorder": {
+      "name": "📦 Pre-Orders",
+      "commands": {
+        "!po": { "description": "Add new pre-order", "enabled": true },
+        "!po list": { "description": "List all pre-orders", "enabled": true }
+      }
     },
     "wishlist": {
-      "enabled": true,
-      "description": "Add wishlist item"
+      "name": "🛍️ Wishlist",
+      "commands": {
+        "!wishlist": { "description": "Add wishlist item", "enabled": true },
+        "!wishlist list": { "description": "List all wishlist items", "enabled": true }
+      }
     },
-    "wishlistList": {
-      "enabled": true,
-      "description": "List all wishlist items"
-    },
-    "notionlink": {
-      "enabled": true,
-      "description": "Get Notion database link"
-    },
-    "receipt": {
-      "enabled": true,
-      "description": "Process receipt with Veryfi"
+    "other": {
+      "name": "🔗 Other",
+      "commands": {
+        "!notionlink": { "description": "Get Notion database link", "enabled": true },
+        "Send receipt image": { "description": "Process receipt with Veryfi", "enabled": true }
+      }
     }
   }
 }
