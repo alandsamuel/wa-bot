@@ -7,8 +7,9 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 - ✅ **Expense Tracking**: Send expenses in natural format (e.g., "makan nasi padang 20000")
 - 📋 **List Monthly Expenses**: View monthly expenses summary with `!list` command
 - 📅 **Today's Expenses**: Check today's expenses with `!today` command
-- � **Monthly Summary**: Breakdown expenses by category with `!summarize` command
-- 📊 **Daily Summary**: Automatic daily summary of yesterday's expenses sent at midnight
+- 📊 **Monthly Summary**: Breakdown expenses by category with `!summarize` command
+- 🔍 **Search Expenses**: Search expenses by description with `!search <term>` command
+- ⏰ **Daily Summary**: Automatic daily summary of yesterday's expenses sent at midnight
 - ⏰ **Expense Reminder**: Daily reminder at 11 PM to input your expenses
 - 🧾 **Receipt Processing**: Send receipt images for automatic data extraction and Notion storage
 - 🔗 **Share Notion Link**: Get your Notion database link with `!notionlink` command
@@ -16,6 +17,7 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
 - 🛍️ **Wishlist Management**: Manage wishlist items with `!wishlist` and `!wishlist list` commands
 - 🏷️ **Category Management**: Automatically categorize expenses from predefined categories
 - 💾 **Notion Integration**: All data stored in your Notion database
+- 🔀 **Feature Toggles**: Enable/disable commands via config file
 - 🧪 **Comprehensive Testing**: End-to-end and unit tests for all commands
 - 🔐 **Whitelisted Access**: Only whitelisted phone numbers can use the bot
 
@@ -53,6 +55,8 @@ A WhatsApp bot that helps you track and manage your expenses directly through Wh
    WHITELISTED_NUMBERS=6281234567890
    NOTION_TOKEN=your_notion_api_key
    NOTION_DATABASE_ID=your_database_id
+   PO_DATABASE_ID=your_po_database_id
+   WISHLIST_DATABASE_ID=your_wishlist_database_id
    NOTION_LINK=https://www.notion.so/your-database
    VERYFI_CLIENT_ID=your_veryfi_client_id
    VERYFI_AUTHORIZATION=your_veryfi_username:your_veryfi_api_key
@@ -152,6 +156,7 @@ The test will display extracted receipt data and formatted output.
 | `!list`                   | List monthly expenses       | Shows all expenses for current month with total     |
 | `!today`                  | Show today's expenses       | Displays all expenses for today with daily total    |
 | `!summarize`              | Monthly summary by category | Shows expenses breakdown by category                |
+| `!search <term>`          | Search expenses by description | Searches expenses matching the term              |
 | `!notionlink`             | Get Notion link             | Shares your Notion database link                    |
 | `!po`                     | Add pre-order (PO)          | Start interactive flow to track pre-orders          |
 | `!po list`                | List all pre-orders         | Shows all pre-orders with details                   |
@@ -214,10 +219,13 @@ wa-bot/
 ├── handler.js                  # Command handlers and expense parsing logic
 ├── cron.js                     # Daily summary cron job scheduler
 ├── NotionService.js            # Notion database integration and queries
-├── config.js                   # Bot configuration
 ├── constants.js                # Centralized constants and messages
 ├── helper.js                   # Helper utilities (price parsing, etc.)
 ├── receipt.js                  # Receipt processing logic
+├── config/                     # Configuration directory
+│   ├── index.js                # Bot configuration (client options)
+│   ├── feature.json            # Feature toggle configuration
+│   └── featureConfig.js        # Feature toggle module
 ├── Dockerfile                  # Docker configuration
 ├── .dockerignore               # Docker build exclusions
 ├── .gitignore                  # Git exclusions
@@ -225,6 +233,7 @@ wa-bot/
 ├── package.json                # Project dependencies
 ├── jest.config.js              # Jest testing configuration
 ├── pnpm-workspace.yaml         # pnpm workspace config
+├── CRON.md                     # Cron jobs documentation
 ├── test/                       # Test suite
 │   ├── test-list-expenses.js   # Notion integration tests
 │   ├── test-receipt.js         # Receipt processing tests
@@ -232,6 +241,7 @@ wa-bot/
 │   ├── test-wishlist.js        # Wishlist functionality tests
 │   └── e2e/                    # End-to-end tests
 │       └── e2e-commands.test.js# Complete command flow tests
+├── AGENT.md                    # Agent context guide (for developers)
 └── README.md                   # This file
 ```
 
@@ -244,6 +254,7 @@ wa-bot/
 - **handler.js**: Separated command handlers and expense parsing logic for better modularity
 - **cron.js**: Scheduled tasks management with configurable timing
 - **index.js**: Clean entry point with command routing via switch case
+- **config/**: Feature toggles and bot configuration
 - Modular design allowing easy testing and feature additions
 
 ### Error Handling
@@ -258,70 +269,55 @@ wa-bot/
 - Environment-based configuration
 - Puppeteer sandbox mode disabled for Docker compatibility
 - Local authentication with WhatsApp session persistence
-- Customizable cron schedule for daily summary (default: 00:00) and expense reminder (default: 23:00)
+- Feature toggles to enable/disable commands
+- Customizable cron schedule (see CRON.md)
 
-## Cron Jobs Setup
+## Feature Toggles
 
-This bot includes two automated cron jobs:
+Each command can be enabled or disabled via `config/feature.json`:
 
-### Daily Summary
-- **Default Time**: 00:00 (midnight) Asia/Jakarta timezone
-- **Purpose**: Sends yesterday's expenses summary to whitelisted numbers
-- **Cron Expression**: `0 0 * * *`
-
-### Expense Reminder
-- **Default Time**: 23:00 (11 PM) Asia/Jakarta timezone
-- **Purpose**: Reminds you to input your daily expenses
-- **Cron Expression**: `0 23 * * *`
-
-### Customize Cron Schedules
-
-Edit the constants in `cron.js`:
-
-```javascript
-// Daily summary - runs at midnight
-const CRON_SCHEDULE = '0 0 * * *';
-
-// Expense reminder - runs at 11 PM
-const REMINDER_CRON_SCHEDULE = '0 23 * * *';
+```json
+{
+  "commands": {
+    "list": { "enabled": true, "description": "List monthly expenses" },
+    "today": { "enabled": true, "description": "Today's expenses" },
+    "summarize": { "enabled": true, "description": "Monthly summary by category" },
+    "search": { "enabled": true, "description": "Search expenses by description" },
+    "po": { "enabled": true, "description": "Add pre-order (PO)" },
+    "poList": { "enabled": true, "description": "List all pre-orders" },
+    "wishlist": { "enabled": true, "description": "Add wishlist item" },
+    "wishlistList": { "enabled": true, "description": "List all wishlist items" },
+    "notionlink": { "enabled": true, "description": "Get Notion database link" },
+    "receipt": { "enabled": true, "description": "Process receipt with Veryfi" }
+  }
+}
 ```
 
-Use [cron expression syntax](https://crontab.guru/) for custom schedules.
-
-### Testing Cron Jobs
-
-You can manually test the cron jobs by sending commands to the bot:
-
-| Command       | Description                           |
-| ------------- | ------------------------------------- |
-| `!testcron`   | Trigger daily summary manually        |
-
-The bot will send you yesterday's expenses summary immediately.
-
-### Verify Cron is Running
-
-1. Start the bot: `pnpm start`
-2. Look for these log messages:
-   ```
-   ✅ Daily summary cron: Runs every day at 00:00 Asia/Jakarta timezone (0 0 * * *)
-   ✅ Expense reminder cron: Runs every day at 23:00 Asia/Jakarta timezone (0 23 * * *)
-   ```
-3. If you see "Cron job already initialized", the crons are already running from a previous session
+Disabled commands:
+- Won't appear in help message
+- Won't execute even if called
 
 ## Development
 
 ### Add New Command
 
 1. Add command constant in `constants.js`
-2. Create handler function in `handler.js`
-3. Add case to switch statement in `index.js`
-4. Add help message in `MESSAGES.HELP_MESSAGE`
+2. Add to `config/feature.json` with enabled flag and description
+3. Create handler function in `handler.js`
+4. Add case to switch statement in `index.js` with `isEnabled()` check
+5. Use `getHelpMessage()` for dynamic help text
 
 ### Add New Message
 
 1. Add to `MESSAGES` object in `constants.js`
 2. Use `{placeholder}` syntax for dynamic values
 3. Replace placeholders with `.replace()` in code
+
+### Toggle Feature
+
+1. Edit `config/feature.json`
+2. Set `enabled` to `true` or `false`
+3. Changes take effect immediately (no restart needed for help message)
 
 ## Troubleshooting
 
